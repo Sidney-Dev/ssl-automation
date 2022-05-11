@@ -33,3 +33,17 @@ Route::middleware([
         return Inertia::render('Dashboard');
     })->name('dashboard');
 });
+
+Route::get('/certificates', function () {
+    return view('certificates');
+});
+
+
+Route::get('/environments', function () {
+    return view('environments');
+});
+
+
+Route::get('/users', function () {
+    return view('users');
+});
