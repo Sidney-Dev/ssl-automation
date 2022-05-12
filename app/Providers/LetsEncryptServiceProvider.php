@@ -7,7 +7,7 @@ use AcmePhp\Core\Http\SecureHttpClientFactory;
 use AcmePhp\Core\Http\ServerErrorHandler;
 use AcmePhp\Ssl\Parser\KeyParser;
 use AcmePhp\Ssl\Signer\DataSigner;
-use App\LetsEncrypt;
+use App\Jobs\LetsEncrypt;
 use GuzzleHttp\Client as GuzzleHttpClient;
 use Illuminate\Support\ServiceProvider;
 

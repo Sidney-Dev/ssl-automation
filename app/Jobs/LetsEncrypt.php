@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Jobs;
 
 use AcmePhp\Core\AcmeClient;
 use AcmePhp\Core\Http\SecureHttpClientFactory;

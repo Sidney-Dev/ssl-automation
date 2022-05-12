@@ -16,7 +16,6 @@
         "laravel/tinker": "^2.7",
         "psr/log": "^1.0",
         "tightenco/ziggy": "^1.0",
-        "laravel/nova": "~4.0",
         "ext-json": "*"
     },
     "require-dev": {
