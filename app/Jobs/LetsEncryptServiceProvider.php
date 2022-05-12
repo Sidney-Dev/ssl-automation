@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Jobs;
 
 use AcmePhp\Core\Http\Base64SafeEncoder;
 use AcmePhp\Core\Http\SecureHttpClientFactory;

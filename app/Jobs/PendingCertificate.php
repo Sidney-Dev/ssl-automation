@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Jobs;
 
 use App\Exceptions\DomainAlreadyExists;
 use App\Exceptions\InvalidDomainException;

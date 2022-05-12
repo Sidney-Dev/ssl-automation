@@ -3,12 +3,12 @@
 namespace App\Facades;
 
 use App\Models\LetsEncryptCertificate;
-use App\PendingCertificate;
+use App\Jobs\PendingCertificate;
 use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @mixin \App\LetsEncrypt
+ * @mixin \App\Jobs\LetsEncrypt
  * @method static array create(string $domain, array $chain = [])
  * @method static LetsEncryptCertificate createNow(string $domain)
  * @method static LetsEncryptCertificate renewNow(string|LetsEncryptCertificate $domain)
