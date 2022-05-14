@@ -38,6 +38,18 @@ Route::get('/certificates', function () {
     return view('certificates');
 });
 
+Route::get('/create-certificate', function () {
+    return view('create-certificate');
+});
+
+Route::get('/certificate-details', function () {
+    return view('certificate-details');
+});
+
+Route::get('/domain-details', function () {
+    return view('domain-details');
+});
+
 
 Route::get('/environments', function () {
     return view('environments');
