@@ -44,6 +44,11 @@
         <div class="flex justify-end max-w-7xl mx-auto mt-6">
             <a href="/create-certificate" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">Create Certificate</a>
         </div>
+        @if(Session::has('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>{{ Session::get('success') }}</strong>
+        </div>
+        @endif
 
         <div class="pt-6 pb-12">
             <div class="max-w-7xl mx-auto">
@@ -71,57 +76,25 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                @foreach($allCertificateInfos as $certInfo)
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            1
+                                        {{ $certInfo->id }}
                                         </th>
                                         <td class="px-6 py-4">
-                                            domain
+                                        {{ $certInfo->domain }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            Success
+                                        {{ $certInfo->created == 1 ? 'Success' : 'Failed'  }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            date & time
+                                        {{ $certInfo->last_renewed_at }}
                                         </td>
                                         <td class="px-6 py-4 text-right">
-                                            <a href="/certificate-details" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
+                                            <a href="{{ route('certificate-details', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
                                         </td>
                                     </tr>
-                                    <tr class="bg-white border-b hover:bg-gray-50">
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            2
-                                        </th>
-                                        <td class="px-6 py-4">
-                                            domain
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            Success
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            date & time
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <a href="/certificate-details" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
-                                        </td>
-                                    </tr>
-                                    <tr class="bg-white hover:bg-gray-50">
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            3
-                                        </th>
-                                        <td class="px-6 py-4">
-                                            domain
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            Success
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            date & time
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <a href="/certificate-details" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
-                                        </td>
-                                    </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                         </div>

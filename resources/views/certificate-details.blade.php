@@ -53,12 +53,13 @@
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <tbody>
+                                    @isset($certificateInfos)
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4" width="30%">
                                             ID
                                         </td>
                                         <td class="px-6 py-4">
-                                            (id)
+                                            {{ $certificateInfos->id }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -74,7 +75,7 @@
                                             domain
                                         </td>
                                         <td class="px-6 py-4">
-                                            (domain)
+                                            {{ $certificateInfos->domain }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -82,7 +83,7 @@
                                             status
                                         </td>
                                         <td class="px-6 py-4">
-                                            (status)
+                                            {{ $certificateInfos->created == 1 ? 'Success' : 'Failed'  }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -90,7 +91,7 @@
                                             last_renewed_at
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                            {{ $certificateInfos->last_renewed_at }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -98,7 +99,7 @@
                                             fullchain_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                            {{ $certificateInfos->fullchain_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -106,7 +107,7 @@
                                             chain_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                            {{ $certificateInfos->chain_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -114,7 +115,7 @@
                                             cert_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                            {{ $certificateInfos->cert_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white hover:bg-gray-50">
@@ -122,9 +123,10 @@
                                             privkey_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                        {{ $certificateInfos->privkey_path }}
                                         </td>
                                     </tr>
+                                    @endisset
                                 </tbody>
                             </table>
                         </div>
