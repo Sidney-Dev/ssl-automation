@@ -7,8 +7,12 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Domain Details</title>
 </head>
+
+<div>
+    @include('nav')
+</div>
 
 <body>
 
@@ -78,10 +82,6 @@
 
                 <div class="mt-10 text-xl">Certificates</div>
 
-                <div class="flex justify-end max-w-7xl mx-auto mt-2">
-                    <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">Add New Certificate</button>
-                </div>
-
                 <div class="relative overflow-x-auto shadow-md sm:rounded-lg mt-6">
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -117,7 +117,7 @@
                                     (date & time)
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
+                                    <a href="/certificate-details" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
                                 </td>
                             </tr>
                         </tbody>
