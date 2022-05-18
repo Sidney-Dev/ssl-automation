@@ -61,13 +61,12 @@
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                             <table class="w-full text-sm text-left text-gray-500">
                                 <tbody>
-                                    @isset($certificateInfos)
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4" width="30%">
                                             ID
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->id }}
+                                            (id)
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -83,7 +82,7 @@
                                             domain
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->domain }}
+                                            (domain)
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -91,7 +90,7 @@
                                             status
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->created == 1 ? 'Success' : 'Failed'  }}
+                                            (status)
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -99,7 +98,7 @@
                                             last_renewed_at
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->last_renewed_at }}
+                                            ...
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -107,7 +106,7 @@
                                             fullchain_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->fullchain_path }}
+                                            ...
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -115,7 +114,7 @@
                                             chain_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->chain_path }}
+                                            ...
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -123,7 +122,7 @@
                                             cert_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->cert_path }}
+                                            ...
                                         </td>
                                     </tr>
                                     <tr class="bg-white hover:bg-gray-50">
@@ -131,10 +130,9 @@
                                             privkey_path
                                         </td>
                                         <td class="px-6 py-4">
-                                        {{ $certificateInfos->privkey_path }}
+                                            ...
                                         </td>
                                     </tr>
-                                    @endisset
                                 </tbody>
                             </table>
                         </div>
@@ -259,11 +257,17 @@
                             <table width="100%">
                                 <tr>
                                     <td>name</td>
-                                    <td><input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></td>
+                                    <td>
+                                        <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                        <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Name is empty or invalid.</p>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>environment</td>
-                                    <td class="pt-4"><input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></td>
+                                    <td class="pt-4">
+                                        <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                        <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Environment is empty or invalid.</p>
+                                    </td>
                                 </tr>
                             </table>
                         </div>
@@ -296,11 +300,17 @@
                             <table width="100%">
                                 <tr>
                                     <td>name</td>
-                                    <td><input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></td>
+                                    <td>
+                                        <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                        <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Name is empty or invalid.</p>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>domain</td>
-                                    <td class="pt-4"><input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></td>
+                                    <td class="pt-4">
+                                        <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                        <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Domain is empty or invalid.</p>
+                                    </td>
                                 </tr>
                             </table>
                         </div>
