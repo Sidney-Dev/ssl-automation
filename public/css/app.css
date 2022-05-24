@@ -3019,3 +3019,25 @@ select {
         padding-right: 2rem;
     }
 }
+
+/* Custom styles */
+.status-success {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background-color: #22c55e;
+}
+
+.status-pending {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background-color: #f59e0b;
+}
+
+.status-error {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    background-color: #dc2626;
+}
