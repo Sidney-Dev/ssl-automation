@@ -22,7 +22,7 @@ class ChallengeAuthorization implements ShouldQueue
     protected $challenge;
 
 
-    public function __construct(AuthorizationChallenge $httpChallenge, int $tries = null, int $retryAfter = null, array $retryList = [])
+    public function __construct($httpChallenge, int $tries = null, int $retryAfter = null, array $retryList = [])
     {
         $this->challenge = $httpChallenge;
         $this->tries = $tries;

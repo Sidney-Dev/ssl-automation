@@ -57,14 +57,13 @@ class RequestAuthorization implements ShouldQueue
      * @param AuthorizationChallenge $challenge
      * @throws FailedToMoveChallengeException
      */
-    protected function placeChallenge(AuthorizationChallenge $challenge): void
+    protected function placeChallenge($challenge): void
     {
-
 
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'http://cohesiondx8s5max7g9qc.devcloud.acquia-sites.com/letsencrypt/token?token=' . $challenge->getToken() . '=1&payload=' . $challenge->getPayload(),
+            CURLOPT_URL => 'http://'.$challenge->getDomain().'/letsencrypt/token?token=' . $challenge->getToken() . '&payload=' . $challenge->getPayload(),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -77,18 +76,6 @@ class RequestAuthorization implements ShouldQueue
         $response = curl_exec($curl);
 
         curl_close($curl);
-        dump( $response);
-
-
-//        $client = new Client();
-//        $response = $client->post('http://cohesiondx8.ddev.site/letsencrypt/token?token=' . $challenge->getToken() . '=1&payload=' . $challenge->getPayload());
-
-//        $path = PathGeneratorFactory::create()->getChallengePath($challenge->getToken());
-//        $success = Storage::disk(config('lets_encrypt.challenge_disk'))->put($path, $challenge->getPayload());
-
-//        if ($response->getStatusCode() !== 200) {
-//            throw new FailedToMoveChallengeException($path);
-//        }
     }
 
     public function handle()

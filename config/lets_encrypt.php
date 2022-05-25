@@ -5,6 +5,7 @@ use App\Support\DefaultPathGenerator;
 return [
 
     // Important, change to production LE directory for real certs!
+    //https://acme-v02.api.letsencrypt.org
     'api_url' => env('LETS_ENCRYPT_API_URL', 'https://acme-staging-v02.api.letsencrypt.org/directory'),
 
     // The path to the public ssl key used for connecting with the let's encrypt API.

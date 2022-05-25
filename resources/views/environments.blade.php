@@ -26,12 +26,17 @@
             </div>
         </header>
 
+        @if (Session::has('error'))
+            <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ Session::get('error') }}</p>
+        @endif
+
         <div class="pt-6 pb-12">
             <div class="max-w-7xl mx-auto">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                     <div class="bg-white border-b border-gray-200">
 
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                            @isset($environmentDetails)
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                                     <tr>
@@ -53,71 +58,42 @@
                                         <th scope="col" class="px-6 py-3">
                                             DEFAULT DOMAIN
                                         </th>
+                                        <th scope="col" class="px-6 py-3">
+                                            TOTAL DOMAIN
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="bg-white border-b hover:bg-gray-50">
+                                    @foreach($environmentDetails as $details)
+                                    <tr class="bg-white border-b hover:bg-gray-50" style="vertical-align:baseline">
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            1
+                                            {{ $details->id }}
                                         </th>
                                         <td class="px-6 py-4">
-                                            (label)
+                                            {{ $details->label }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            (name)
+                                            {{ $details->name }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            (domains)
+                                            @foreach($details->domains as $domain)
+                                            <p>{{ $domain }}</p>
+                                            @endforeach
                                         </td>
                                         <td class="px-6 py-4">
-                                            (active domains)
+                                            {{ $details->active_domain }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            (default domain)
+                                            {{ $details->default_domain }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ count($details->domains) }}
                                         </td>
                                     </tr>
-                                    <tr class="bg-white border-b hover:bg-gray-50">
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            2
-                                        </th>
-                                        <td class="px-6 py-4">
-                                            (label)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (name)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (domains)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (active domains)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (default domain)
-                                        </td>
-                                    </tr>
-                                    <tr class="bg-white hover:bg-gray-50">
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            3
-                                        </th>
-                                        <td class="px-6 py-4">
-                                            (label)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (name)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (domains)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (active domains)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (default domain)
-                                        </td>
-                                    </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
+                            @endisset
                         </div>
 
                     </div>

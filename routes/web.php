@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\EnvironmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,42 +17,39 @@ use App\Http\Controllers\CertificateController;
 */
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return view('welcome');
 });
 
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
-    'verified',
+    'verified'
 ])->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
+        return view('dashboard');
     })->name('dashboard');
-
-    Route::get('/certificates', [CertificateController::class, "index"]);
-    
-    Route::get('/create-certificate',  [CertificateController::class, "create"]);
-
-    Route::post('/create-certificate',  [CertificateController::class, "store"]);
-    
-    Route::get('/certificate-details/{id}', [CertificateController::class, "show"])->name('certificate-details');
-    
-    Route::get('/domain-details', function () {
-        return view('domain-details');
-    });
-    
-    
-    Route::get('/environments', function () {
-        return view('environments');
-    });
-    
-    
-    Route::get('/users', function () {
-        return view('users');
-    });
 });
+
+Route::get('/certificates', [CertificateController::class, "index"])->middleware('auth');
+Route::get('/create-certificate',  [CertificateController::class, "create"])->middleware('auth');
+
+Route::post('/create-certificate',  [CertificateController::class, "store"])->middleware('auth');
+
+Route::get('/certificate-details/{id}', [CertificateController::class, "show"])->middleware('auth')->name('certificate-details');
+Route::get('/certificate-delete/{id}', [CertificateController::class, "destroy"])->middleware('auth')->name('certificate-delete');
+Route::get('/certificate-activate/{id}', [CertificateController::class, "activate"])->middleware('auth')->name('certificate-activate');
+Route::get('/certificate-deactivate/{id}', [CertificateController::class, "deactivate"])->middleware('auth')->name('certificate-deactivate');
+
+Route::get('/domain-details', function () {
+    return view('domain-details');
+})->middleware('auth');
+
+
+Route::get('/environments', [EnvironmentController::class, "getEnvironments"])->middleware('auth');
+
+
+Route::get('/users', [UserController::class, "index"])->middleware('auth');
+
+Route::post('/environments/install', [EnvironmentController::class, "addCertificateToEnvironment"])->middleware('auth');
+
+Route::get('/environments/certificate', [EnvironmentController::class, "getCertificateID"])->middleware('auth');

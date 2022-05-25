@@ -54,35 +54,43 @@
                         </li>
                     </ul>
                 </div>
-
+                @if ($errors->has('domain'))
+                    <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ $errors->first('domain') }}</p>
+                @endif
+                @if(Session::has('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>{{ Session::get('success') }}</strong>
+                </div>
+                @endif
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg mt-4">
                     <div class="bg-white border-b border-gray-200">
 
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                             <table class="w-full text-sm text-left text-gray-500">
                                 <tbody>
+                                    @isset($certificateInfos)
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4" width="30%">
                                             ID
                                         </td>
                                         <td class="px-6 py-4">
-                                            (id)
+                                            {{ $certificateInfos->id }}
                                         </td>
                                     </tr>
-                                    <tr class="bg-white border-b hover:bg-gray-50">
+                                    <!-- <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4">
                                             name
                                         </td>
                                         <td class="px-6 py-4">
                                             (name)
                                         </td>
-                                    </tr>
+                                    </tr> -->
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4">
                                             domain
                                         </td>
                                         <td class="px-6 py-4">
-                                            (domain)
+                                            {{ $certificateInfos->domain }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -90,7 +98,7 @@
                                             status
                                         </td>
                                         <td class="px-6 py-4">
-                                            (status)
+                                            {{ $certificateInfos->created == 1 ? 'Success' : 'Failed'  }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -98,7 +106,7 @@
                                             last_renewed_at
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                            {{ $certificateInfos->last_renewed_at }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -106,7 +114,7 @@
                                             fullchain_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                            {{ $certificateInfos->fullchain_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -114,7 +122,7 @@
                                             chain_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                            {{ $certificateInfos->chain_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -122,7 +130,7 @@
                                             cert_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                            {{ $certificateInfos->cert_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white hover:bg-gray-50">
@@ -130,9 +138,10 @@
                                             privkey_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            ...
+                                        {{ $certificateInfos->privkey_path }}
                                         </td>
                                     </tr>
+                                    @endisset
                                 </tbody>
                             </table>
                         </div>
@@ -141,11 +150,12 @@
                 </div>
 
                 <div class="mt-10 text-xl">Domains</div>
-
+                <!-- Domain count -->
+                <div class="ml-5 mb-4 text-sm text-gray-500">Domains: 5</div>
                 <div class="flex justify-end max-w-7xl mx-auto mt-2">
                     <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none" onclick="openNewDomainPopup()">Add New Domain</button>
                 </div>
-
+                
                 <div class="relative overflow-x-auto shadow-md sm:rounded-lg mt-6">
                     <table class="w-full text-sm text-left text-gray-500">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -189,23 +199,25 @@
 
         <div class="fixed z-10 inset-0 overflow-y-auto">
             <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
-
-                <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg leading-6 font-medium text-red-600" id="modal-title">Delete certificate</h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500">Are you sure you want to delete this certificate?</p>
+                <form action="{{ route('certificate-delete', $certificateInfos->id) }}" method="post">
+                    @csrf
+                    <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-red-600" id="modal-title">Delete certificate</h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500">Are you sure you want to delete this certificate?</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse justify-end">
+                            <button type="button" class="mt-3 w-50 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeDeletePopup()">Cancel</button>
+                            <button type="submit" class="w-50 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">Delete</button>
+                        </div>
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse justify-end">
-                        <button type="button" class="mt-3 w-50 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeDeletePopup()">Cancel</button>
-                        <button type="button" class="w-50 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">Delete</button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -247,35 +259,44 @@
             <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
 
                 <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-2xl sm:w-full">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Add to Evironment</h3>
+                    <form action="{{ url('environments/install') }}" method="post">
+                        @csrf
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Add to Evironment</h3>
+                                </div>
+                            </div>
+                            <div class="py-8 sm:px-10">
+                                <table width="100%">
+                                    <tr>
+                                        <td>certificate name</td>
+                                        <td>
+                                            <input type="text" name="cert_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                            <input type="hidden" name="domain" value="{{ $certificateInfos->domain }}">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>environment</td>
+                                        <td class="pt-4">
+                                            <select name="environment" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                            <option>Please select environment</option>
+                                                @isset($environmentDetails)
+                                                @foreach($environmentDetails as $details)
+                                                <option value="{{ $details->id }}">{{ $details->name }}</option>
+                                                @endforeach
+                                                @endisset
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
-                        <div class="py-8 sm:px-10">
-                            <table width="100%">
-                                <tr>
-                                    <td>name</td>
-                                    <td>
-                                        <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                        <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Name is empty or invalid.</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>environment</td>
-                                    <td class="pt-4">
-                                        <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                        <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Environment is empty or invalid.</p>
-                                    </td>
-                                </tr>
-                            </table>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse justify-end">
+                            <button type="button" class="mt-3 w-50 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeEnvironmentPopup()">Cancel</button>
+                            <button type="submit" class="w-50 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 sm:ml-3 sm:w-auto sm:text-sm">Run Action</button>
                         </div>
-                    </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse justify-end">
-                        <button type="button" class="mt-3 w-50 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeEnvironmentPopup()">Cancel</button>
-                        <button type="button" class="w-50 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 sm:ml-3 sm:w-auto sm:text-sm">Run Action</button>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -300,17 +321,11 @@
                             <table width="100%">
                                 <tr>
                                     <td>name</td>
-                                    <td>
-                                        <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                        <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Name is empty or invalid.</p>
-                                    </td>
+                                    <td><input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></td>
                                 </tr>
                                 <tr>
                                     <td>domain</td>
-                                    <td class="pt-4">
-                                        <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                        <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Domain is empty or invalid.</p>
-                                    </td>
+                                    <td class="pt-4"><input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></td>
                                 </tr>
                             </table>
                         </div>

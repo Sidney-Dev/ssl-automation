@@ -32,6 +32,7 @@
                     <div class="bg-white border-b border-gray-200">
 
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                            @isset($users)
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                                     <tr>
@@ -49,50 +50,26 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @foreach($users as $user)
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            (name)
+                                            {{ $user->name }}
                                         </th>
                                         <td class="px-6 py-4">
-                                            (email)
+                                            {{ $user->email }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            (status)
+                                            {{ $user->created_at }}
                                         </td>
                                         <td class="px-6 py-4 text-right">
                                             <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline" onclick="openResetPopup()">Reset link</a>
                                         </td>
                                     </tr>
-                                    <tr class="bg-white border-b hover:bg-gray-50">
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            (name)
-                                        </th>
-                                        <td class="px-6 py-4">
-                                            (email)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (status)
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline" onclick="openResetPopup()">Reset link</a>
-                                        </td>
-                                    </tr>
-                                    <tr class="bg-white hover:bg-gray-50">
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            (name)
-                                        </th>
-                                        <td class="px-6 py-4">
-                                            (email)
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            (status)
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
-                                            <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline" onclick="openResetPopup()">Reset link</a>
-                                        </td>
-                                    </tr>
+                                    @endforeach
+
                                 </tbody>
                             </table>
+                            @endisset
                         </div>
 
                     </div>

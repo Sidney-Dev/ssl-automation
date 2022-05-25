@@ -11,6 +11,8 @@ use AcmePhp\Ssl\Signer\DataSigner;
 use App\LetsEncrypt;
 use GuzzleHttp\Client as GuzzleHttpClient;
 use App\Models\LetsEncryptCertificate;
+use App\Domains;
+use App\Environments;
 
 
 class CertificateController extends Controller
@@ -23,7 +25,6 @@ class CertificateController extends Controller
     public function index()
     {
         $allCertificateInfos = LetsEncryptCertificate::get();
-      
         return view('certificates', compact("allCertificateInfos"));
     }
 
@@ -72,7 +73,10 @@ class CertificateController extends Controller
     public function show($id)
     {
         $certificateInfos = LetsEncryptCertificate::where('id', '=', $id)->first();
-        return view('certificate-details', compact('certificateInfos'));
+        $env = new Environments();
+        $environmentDetails = $env->getEnvironments();
+      
+        return view('certificate-details', compact('certificateInfos','environmentDetails'));
     }
 
     /**
@@ -106,6 +110,49 @@ class CertificateController extends Controller
      */
     public function destroy($id)
     {
-        //
+        // if (LetsEncryptCertificate::where('id',$id)->delete()) {
+        //     return redirect('/certificates')->with('success', 'Domain deleted');
+        // } else {
+        //     return redirect('/certificates')->with('error', 'Domain could not be deleted');
+        // }
+       
+        $getSlugAndEnvId = LetsEncryptCertificate::where('id',$id)->first();
+        $env = new Environments();
+        $response = $env->certificateDeletion($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
+        
+        if ($response == true) {
+            LetsEncryptCertificate::where('id',$id)->delete();
+            return redirect('/certificates')->with('success', 'Certificate has been deleted');
+        }
+    }
+
+    public function activate($id) {
+        $getSlugAndEnvId = LetsEncryptCertificate::select('slug', 'environmentID')->where('id',$id)->first(); 
+        
+        if($getSlugAndEnvId->slug) {
+            $env = new Environments();
+            $response = $env->certificateActivation($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
+    
+            if ($response == true) {
+                LetsEncryptCertificate::where('id',$id)->update(['status' => 'success']);
+                return redirect('/certificates')->with('success', "Certificate has been activated");
+            }
+        } else {
+            return redirect('/certificates')->with('error', "Please ensure the certificate is installed first");
+        }
+    }
+
+    public function deactivate($id) {
+        $getSlugAndEnvId = LetsEncryptCertificate::select('slug', 'environmentID')->where('id',$id)->first(); 
+        
+        if($getSlugAndEnvId->slug) {
+            $env = new Environments();
+            $response = $env->certificateDeactivation($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
+    
+            if ($response == true) {
+                LetsEncryptCertificate::where('id',$id)->update(['status' => 'pending']);
+                return redirect('/certificates')->with('success', "Certificate has been deactivated");
+            }
+        } 
     }
 }

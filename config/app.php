@@ -187,7 +187,7 @@ return [
          */
 
         App\Providers\LetsEncryptServiceProvider::class,
-
+         
         /*
          * Application Service Providers...
          */

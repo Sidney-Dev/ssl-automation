@@ -35,11 +35,12 @@
         </div>
         @endif
 
+        @if (Session::has('error'))
+            <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ Session::get('error') }}</p>
+        @endif
+
         <div class="pt-6 pb-12">
             <div class="max-w-7xl mx-auto">
-
-                <!-- Domain count -->
-                <div class="ml-5 mb-4 text-sm text-gray-500">Domains: 5</div>
 
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                     <div class="bg-white border-b border-gray-200">
@@ -64,7 +65,7 @@
                                         </th>
                                     </tr>
                                 </thead>
-                                <!-- <tbody>
+                                <tbody>
                                 @foreach($allCertificateInfos as $certInfo)
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
@@ -73,58 +74,35 @@
                                         <td class="px-6 py-4">
                                         {{ $certInfo->domain }}
                                         </td>
-                                        <td class="px-6 py-4">
-                                        {{ $certInfo->created == 1 ? 'Success' : 'Failed'  }}
+                                        @if($certInfo->status == 'success')
+                                        <td class="flex px-6 py-4">
+                                            <div class="status-success self-center mr-2"></div>
+                                            <div>Success</div>
                                         </td>
+                                        @elseif($certInfo->status == 'pending')
+                                        <td class="flex px-6 py-4">
+                                            <div class="status-pending self-center mr-2"></div>
+                                            <div>Pending</div>
+                                        </td>
+                                        @elseif($certInfo->status == 'error')
+                                        <td class="flex px-6 py-4">
+                                            <div class="status-error self-center mr-2"></div>
+                                            <div>Error</div>
+                                        </td>
+                                        @endif
                                         <td class="px-6 py-4">
                                         {{ $certInfo->last_renewed_at }}
                                         </td>
                                         <td class="px-6 py-4 text-right">
                                             <a href="{{ route('certificate-details', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
+                                            @if($certInfo->status == 'pending'  || $certInfo->status == 'success')
+                                            <a href="{{ $certInfo->slug != null && $certInfo->status=='pending' ? route('certificate-activate', $certInfo->id) : route('certificate-deactivate', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-4">{{ $certInfo->slug != null && $certInfo->status=='pending' ? 'Activate' : 'Deactivate'}}</a>
+                                            @elseif($certInfo->status != 'success')
+                                            <a href="{{ route('certificate-delete', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Remove</a>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach
-                                </tbody> -->
-                                <tbody>
-
-                                    <tr class="bg-white border-b hover:bg-gray-50">
-                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-
-                                        </th>
-                                        <td class="px-6 py-4">
-
-                                        </td>
-                                        <td class="flex px-6 py-4">
-
-                                            <div class="status-success self-center mr-2"></div>
-                                            <div>Success</div>
-
-                                            <!-- Secpnd state -->
-                                            <!-- <div class="status-pending self-center mr-2"></div>
-                                            <div>Pending</div> -->
-
-                                            <!-- Third state -->
-                                            <!-- <div class="status-error self-center mr-2"></div>
-                                            <div>Error</div> -->
-
-                                        </td>
-                                        <td class="px-6 py-4">
-
-                                        </td>
-                                        <!-- First state when not installed yet -->
-                                        <td class="px-6 py-4 text-right">
-                                            <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-4">View</a>
-                                            <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-4">Install</a>
-                                            <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Remove</a>
-                                        </td>
-                                        <!-- Second state when installed and toggle between Activate or Deactivate states -->
-                                        <!-- <td class="px-6 py-4 text-right">
-                                            <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-4">View</a>
-                                            <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-4">Activate</a> // Or Deactivate
-                                            <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Uninstall</a>
-                                        </td> -->
-                                    </tr>
-
                                 </tbody>
                             </table>
                         </div>

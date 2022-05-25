@@ -44,7 +44,7 @@
             </div>
         </header>
         @if ($errors->has('domain'))
-            <span class="text-danger">{{ $errors->first('domain') }}</span>
+            <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ $errors->first('domain') }}</p>
         @endif
         <form method="post" action="{{ url('/create-certificate') }}">
             @csrf
@@ -52,33 +52,20 @@
                 <div class="max-w-7xl mx-auto">
                     <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                         <div class="bg-white border-b border-gray-200 py-8 sm:px-20 items-center">
-
                             <div class="flex items-center">
                                 <label>domain</label>
                                 <input type="text" name="domain" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-3/4 p-2.5 mx-auto">
                             </div>
-
-        <div class="py-6">
-            <div class="max-w-7xl mx-auto">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
-                    <div class="bg-white border-b border-gray-200 py-8 sm:px-20 items-center">
-
-                        <div class="flex items-center">
-                            <label>domain</label>
-                            <div class="block w-3/4 p-2.5 mx-auto">
-                                <input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full">
-                                <p class="block mt-2 text-sm text-red-600 dark:text-red-500">Domain is empty or invalid.</p>
-                            </div>
                         </div>
-
                     </div>
                 </div>
             </div>
 
-        <div class="flex justify-end max-w-7xl mx-auto">
-            <a href="/certificates" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">Cancel</a>
-            <a href="#" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2" onclick="toggleSuccessToast()">Create Certificate</a>
-        </div>
+            <div class="flex justify-end max-w-7xl mx-auto">
+                <a href="/certificates" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">Cancel</a>
+                <input type="submit" name="create" value="Create Certificate" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">
+            </div>
+        </form>
 
     </div>
 

@@ -13,12 +13,19 @@
                     <a href="/users" class="block py-2 pr-4 pl-3 text-gray-700 border-b border-gray-100 hover:bg-gray-50 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0">Users</a>
                 </li>
             </ul>
+            @if (Route::has('login'))
             <ul class="flex mt-4 md:flex-row md:space-x-8 md:mt-0 md:text-sm md:font-medium">
-                <li>User Name</li>
+                @auth
+                <li>{{ Auth::user()->name }}</li>
                 <li>
-                    <a href="#" class="block py-2 pr-4 pl-3 text-gray-700 border-b border-gray-100 hover:bg-gray-50 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0">Log out</a>
+                <form action=" {{ url('/logout') }}" style="display:inline" method="post">
+                @csrf
+                    <a href="#" onclick="this.parentNode.submit()" class="block py-2 pr-4 pl-3 text-gray-700 border-b border-gray-100 hover:bg-gray-50 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0">Log out</a>
+                </form>
                 </li>
+                @endauth
             </ul>
+            @endif
         </div>
     </div>
 </nav>

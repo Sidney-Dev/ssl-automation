@@ -67,11 +67,12 @@ class StoreCertificate implements ShouldQueue
         $factory = PathGeneratorFactory::create();
 
         $this->storeInPossiblyNonExistingDirectory($factory, 'cert', $certPem);
-        $this->storeInPossiblyNonExistingDirectory($factory, 'chain', $certPem);
+        $this->storeInPossiblyNonExistingDirectory($factory, 'chain', $chainPem);
         $this->storeInPossiblyNonExistingDirectory($factory, 'fullchain', $fullChainPem);
         $this->storeInPossiblyNonExistingDirectory($factory, 'privkey', $privkeyPem);
         $this->dbCertificate->last_renewed_at = now();
         $this->dbCertificate->created = true;
+        $this->dbCertificate->status = 'pending';
         $this->dbCertificate->save();
     }
 
