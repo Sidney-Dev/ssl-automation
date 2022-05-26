@@ -62,3 +62,17 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## How to Install
+
+1. Clone the repository with the following command: git clone ssh://git@bitbucket-ssh.uhub.biz:7999/wunjhbt/berlin-chemie-ssl-automation.git
+2. cd to the folder berlin-chemie-ssl-automation
+3. Checkout to the new ssl laravel application branch command: git checkout new_ssl_laravel_application
+4. Run composer install
+5. Copy and rename the .env.example file to .env
+6. Create your database
+7. Configure the .env file with the following info: database name, database user, database password
+8. Generate a new key for your application. command: php artisan key:generate
+9. Finally run the migration command: php artisan migrate
+
+
