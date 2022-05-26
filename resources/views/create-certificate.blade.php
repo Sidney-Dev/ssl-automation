@@ -44,7 +44,7 @@
             </div>
         </header>
         @if ($errors->has('domain'))
-            <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ $errors->first('domain') }}</p>
+            <p class="block mt-2 text-sm text-red-600 text-center dark:text-red-500">{{ $errors->first('domain') }}</p>
         @endif
         <form method="post" action="{{ url('/create-certificate') }}">
             @csrf

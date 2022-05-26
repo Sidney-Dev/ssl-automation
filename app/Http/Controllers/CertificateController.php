@@ -13,6 +13,7 @@ use GuzzleHttp\Client as GuzzleHttpClient;
 use App\Models\LetsEncryptCertificate;
 use App\Domains;
 use App\Environments;
+use Illuminate\Support\Str;
 
 
 class CertificateController extends Controller
@@ -58,9 +59,25 @@ class CertificateController extends Controller
         $validateData = $request->validate([
             'domain' => 'required'
         ]);
-     
-        if ($new->createNow($request->domain)) {
-            return redirect('/certificates')->with('success', 'Certificate has been generated for ' . $request->domain);
+
+        $is_creating = 0;
+
+        if (Str::contains($request->domain,",")) {
+            $domains = explode(",",$request->domain);
+
+            foreach($domains as $domain) {
+                if ($new->createNow($domain)) {
+                    $is_creating++;
+                }
+            }
+
+            if ($is_creating !=0) {
+                return redirect('/certificates')->with('success', 'Certificate has been generated for ' . implode(",", $domains));
+            }
+        } else {
+            if ($new->createNow($request->domain)) {
+                return redirect('/certificates')->with('success', 'Certificate has been generated for ' . $request->domain);
+            }
         }
     }
 

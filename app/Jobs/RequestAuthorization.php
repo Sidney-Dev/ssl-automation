@@ -57,7 +57,7 @@ class RequestAuthorization implements ShouldQueue
      * @param AuthorizationChallenge $challenge
      * @throws FailedToMoveChallengeException
      */
-    protected function placeChallenge($challenge): void
+    protected function placeChallenge(AuthorizationChallenge $challenge): void
     {
 
         $curl = curl_init();
@@ -76,6 +76,7 @@ class RequestAuthorization implements ShouldQueue
         $response = curl_exec($curl);
 
         curl_close($curl);
+        // dd([$response, 'http://'.$challenge->getDomain().'/letsencrypt/token?token=' . $challenge->getToken() . '&payload=' . $challenge->getPayload()]);
     }
 
     public function handle()

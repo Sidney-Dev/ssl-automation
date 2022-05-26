@@ -30,13 +30,13 @@
             <a href="/create-certificate" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">Create Certificate</a>
         </div>
         @if(Session::has('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success text-green-400 text-center alert-dismissible fade show" role="alert">
             <strong>{{ Session::get('success') }}</strong>
         </div>
         @endif
 
         @if (Session::has('error'))
-            <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ Session::get('error') }}</p>
+            <p class="block mt-2 text-sm text-red-600 text-center dark:text-red-500">{{ Session::get('error') }}</p>
         @endif
 
         <div class="pt-6 pb-12">
@@ -96,8 +96,9 @@
                                         <td class="px-6 py-4 text-right">
                                             <a href="{{ route('certificate-details', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
                                             @if($certInfo->status == 'pending'  || $certInfo->status == 'success')
-                                            <a href="{{ $certInfo->slug != null && $certInfo->status=='pending' ? route('certificate-activate', $certInfo->id) : route('certificate-deactivate', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-4">{{ $certInfo->slug != null && $certInfo->status=='pending' ? 'Activate' : 'Deactivate'}}</a>
-                                            @elseif($certInfo->status != 'success')
+                                            <a href="{{ ($certInfo->slug == null || $certInfo->slug != null) && $certInfo->status=='pending' ? route('certificate-activate', $certInfo->id) : route('certificate-deactivate', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline mr-4">{{ ($certInfo->slug == null || $certInfo->slug != null) && $certInfo->status=='pending' ? 'Activate' : 'Deactivate'}}</a>
+                                            @endif
+                                            @if($certInfo->status != 'success')
                                             <a href="{{ route('certificate-delete', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Remove</a>
                                             @endif
                                         </td>
