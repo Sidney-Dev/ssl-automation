@@ -21,7 +21,7 @@ class EnvironmentController extends Controller
         }
     }
 
-    public function getEnvironments() 
+    public function index() 
     {
         $env = new Environments();
         $environmentDetails = $env->getEnvironments();

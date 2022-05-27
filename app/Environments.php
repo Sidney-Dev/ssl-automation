@@ -4,6 +4,11 @@ namespace App;
 //require_once('../vendor/autoload.php');
 use GuzzleHttp\Client;
 use App\Models\LetsEncryptCertificate;
+use App\Exceptions\CertificateNotActivatedException;
+use App\Exceptions\CertificateNotInstalledException;
+use App\Exceptions\CertificateNotDeactivatedException;
+use App\Exceptions\CertificateNotDeletedException;
+use App\Exceptions\EnvironmentNotFoundException;
 
 class Environments
 {
@@ -36,40 +41,37 @@ class Environments
         $chain = urlencode(file_get_contents(storage_path('app/letsencrypt/certificates/' . $domain . '/chain.pem')));
         $key = urlencode(file_get_contents(storage_path('app/letsencrypt/certificates/' . $domain . '/privkey.pem')));
 
-        try {
-            $curl = curl_init();
+       
+        $curl = curl_init();
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => 'cloud.acquia.com/api/environments/' . $envID . '/ssl/certificates',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'POST',
-                CURLOPT_POSTFIELDS => "legacy=0&certificate=" . $cert . "&private_key=" . $key . "&ca_certificates=" . $chain . "&label=" . $certName,
-                CURLOPT_HTTPHEADER => array(
-                    'Authorization: Bearer ' . $this->authenticationToken,
-                    'Content-Type: application/x-www-form-urlencoded'
-                ),
-            ));
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'cloud.acquia.com/api/environments/' . $envID . '/ssl/certificates',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => "legacy=0&certificate=" . $cert . "&private_key=" . $key . "&ca_certificates=" . $chain . "&label=" . $certName,
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: Bearer ' . $this->authenticationToken,
+                'Content-Type: application/x-www-form-urlencoded'
+            ),
+        ));
 
-            $response = curl_exec($curl);
-            $httpcode = curl_getinfo($curl,CURLINFO_HTTP_CODE);
-            curl_close($curl);
-
+        $response = curl_exec($curl);
+        curl_close($curl);
+      
+        if (strpos($response,"error") === false) {
             $certificateID = $this->getCertificateID($certName, $envID);
             LetsEncryptCertificate::where('domain',$domain)->update(['slug' => $certificateID, 'environmentID' => $envID]); // update LetsEncryptCertificate table
-          
-            if ($httpcode == '202') {
-                return true;
-            }
-
-        } catch(\Exception $e) {
-            dd($e->getMessage());
+            return true;
+        } else {
+            throw new CertificateNotInstalledException();
         }
     }
+
 
     public function certificateActivation($envID, $certificateID)
     {
@@ -89,7 +91,7 @@ class Environments
             }
 
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            throw new CertificateNotActivatedException();
         }
     }
 
@@ -111,7 +113,7 @@ class Environments
             }
 
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            throw new CertificateNotDeactivatedException();
         }
     }
 
@@ -133,7 +135,7 @@ class Environments
             }
 
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            throw new CertificateNotDeletedException();
         }
     }
 
@@ -156,7 +158,7 @@ class Environments
                 return $environments->_embedded->items;
             }
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            throw new EnvironmentNotFoundException();
         }
     }
 
@@ -193,8 +195,3 @@ class Environments
     {
     }
 }
-
-
-//$domains = new Domains();
-//
-//$domains->updateDNS('value', 'RC8Tg2MUzuBS3c7oy6m8IJWZJS4cZ3XEf48XJ20hmvI');

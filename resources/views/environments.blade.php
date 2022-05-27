@@ -27,7 +27,7 @@
         </header>
 
         @if (Session::has('error'))
-            <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ Session::get('error') }}</p>
+            <p class="block mt-2 text-sm text-red-600 text-center dark:text-red-500">{{ Session::get('error') }}</p>
         @endif
 
         <div class="pt-6 pb-12">

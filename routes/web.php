@@ -45,10 +45,12 @@ Route::get('/domain-details', function () {
 })->middleware('auth');
 
 
-Route::get('/environments', [EnvironmentController::class, "getEnvironments"])->middleware('auth');
-
 
 Route::get('/users', [UserController::class, "index"])->middleware('auth');
+
+
+
+Route::get('/environments', [EnvironmentController::class, "index"])->middleware('auth');
 
 Route::post('/environments/install', [EnvironmentController::class, "addCertificateToEnvironment"])->middleware('auth');
 

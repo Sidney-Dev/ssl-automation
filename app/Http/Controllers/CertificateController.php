@@ -138,7 +138,7 @@ class CertificateController extends Controller
         $response = $env->certificateDeletion($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
         
         if ($response == true) {
-            LetsEncryptCertificate::where('id',$id)->delete();
+            // LetsEncryptCertificate::where('id',$id)->delete();
             return redirect('/certificates')->with('success', 'Certificate has been deleted');
         }
     }
