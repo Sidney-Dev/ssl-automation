@@ -59,26 +59,13 @@ class CertificateController extends Controller
         $validateData = $request->validate([
             'domain' => 'required'
         ]);
-
-        $is_creating = 0;
-
-        if (Str::contains($request->domain,",")) {
-            $domains = explode(",",$request->domain);
-
-            foreach($domains as $domain) {
-                if ($new->createNow($domain)) {
-                    $is_creating++;
-                }
-            }
-
-            if ($is_creating !=0) {
-                return redirect('/certificates')->with('success', 'Certificate has been generated for ' . implode(",", $domains));
-            }
-        } else {
-            if ($new->createNow($request->domain)) {
-                return redirect('/certificates')->with('success', 'Certificate has been generated for ' . $request->domain);
-            }
-        }
+     
+        try {
+            $new->createNow($request->domain);
+            return redirect('/certificates')->with('success', 'Certificate has been generated for ' . $request->domain);
+        } catch(\Exception $e) {
+            return redirect('/certificates')->with('error','Failed to generate a certificate for ' . $request->domain);
+        }      
     }
 
     /**
