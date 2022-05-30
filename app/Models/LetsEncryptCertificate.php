@@ -84,72 +84,65 @@ class LetsEncryptCertificate extends Model
         return LetsEncrypt::renewNow($this);
     }
 
-    public function generate($mainDomain, $additionalDomains = "") {
+    public function generate($mainDomain, $additionalDomains = "")
+    {
+        $addonDomainsAuthorize = null;
 
-        $addonDomainsAuthorize = '';
-        
-        if(!empty($additionalDomains)) {
+        if (!empty($additionalDomains)) {
             $additionalDomainsArray = explode(",", $additionalDomains);
-            
+
             // additional domains used during authorization
             $addonDomainsAuthorize = implode(" ", $additionalDomainsArray); // (domaina.com domainb.com)
-            
+
             $convertedDomainsArray = [];
-            
-            foreach($additionalDomainsArray as $value) {
+
+            foreach ($additionalDomainsArray as $value) {
                 array_push($convertedDomainsArray, "-a " . trim($value));
             }
-            
+
             // additional domains used during the request
             $additionalDomains = implode(" ", $convertedDomainsArray); // (-a domaina.com -a domainb.com)
         }
-    
-        try {
-    
-            $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
-            $this->certificateChallenge($authResponse);
-            
-            $certificateRequestCheck = $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
+        
+        $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
+        
+        $this->certificateChallenge($authResponse);
 
-            // Note: only uncomment this when needed because it generates an actual certificate
-            // $certificateRequest = $this->certificateRequest($mainDomain, $additionalDomains);
-    
-            if(!empty($additionalDomains)) return $additionalDomainsArray;
+        $certificateRequestCheck = $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
 
-            return $this->message;
+        // Note: only uncomment this when needed because it generates an actual certificate
+        // $certificateRequest = $this->certificateRequest($mainDomain, $additionalDomains);
 
-        } catch(\Exception $e) {
-    
-            var_dump($e->getMessage());
-    
-        }
+        if (!empty($additionalDomains)) return $additionalDomainsArray;
+        return $this->message;
     }
 
-    public function certificateAuthorization($mainDomain, $additionalDomains = "") {
-
+    public function certificateAuthorization($mainDomain, $additionalDomains = "")
+    {
         $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
         $successMessage = "The authorization tokens was successfully fetched!";
+        
+        if (Str::contains($authResponse, $successMessage)) {
+            return "success";
 
-        if(Str::contains($authResponse, $successMessage)){
-            $this->message = $successMessage;
+        } else {
+            return redirect('/create-certificate')->with('error', "Certificate authorization error");
         }
-
-        return $authResponse;
     }
 
-    public function certificateChallenge($authResponse) {
-
+    public function certificateChallenge($authResponse)
+    {
         $matches = [];
         preg_match_all('/{(.*?)}}/', $authResponse, $matches);
 
-        foreach($matches[0] as $match) {
+        foreach ($matches[0] as $match) {
 
             $data = json_decode($match);
 
             $curl = curl_init();
 
             curl_setopt_array($curl, array(
-                CURLOPT_URL => 'http://'. $data->domain .'/letsencrypt/token?token=' . $data->challenge->token . '&payload=' . $data->challenge->payload,
+                CURLOPT_URL => 'http://' . $data->domain . '/letsencrypt/token?token=' . $data->challenge->token . '&payload=' . $data->challenge->payload,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
@@ -160,42 +153,43 @@ class LetsEncryptCertificate extends Model
             ));
 
             $response = curl_exec($curl);
-
+            $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    
             curl_close($curl);
+
+            if ($http_code != "200") {
+                return redirect('/create-certificate')->with('error', "Failed to load the challenge for ". $data->domain);
+            } 
+           
         }
     }
 
-    public function certificateRequestCheck($mainDomain, $additionalDomains = "") {
-
+    public function certificateRequestCheck($mainDomain, $additionalDomains = "")
+    {
         $check = shell_exec(env('ROOT_DIR') . "check -s http {$mainDomain} {$additionalDomains}");
         $successMessage = 'The authorization check was successful!';
 
-        if(Str::contains($check, $successMessage)){
-            $this->message = $successMessage;
-        }
-        return $check;
-    }
-
-    public function certificateRequest($mainDomain, $additionalDomains) {
-
-        try {
-
-            $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
-            $successMessage = "The SSL certificate was fetched successfully!";
-
-            if(Str::contains($request, $successMessage)){
-                $this->message = $successMessage;
-            }
-            
-            return $request;
-
-        } catch(\Exception $e) {
-    
-            var_dump($e->getMessage());
-    
+        if (Str::contains($check, $successMessage)) {
+            $this->message = "success";
+            return $this->message;
+        } else {
+            return redirect('/create-certificate')->with('error', "Request challenge did not pass");
         }
     }
-    
+
+    public function certificateRequest($mainDomain, $additionalDomains)
+    {
+        $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
+        $successMessage = "The SSL certificate was fetched successfully!";
+
+        if (Str::contains($request, $successMessage)) {
+            $this->message = "success";
+            return $this->message;
+        } else {
+            return redirect('/create-certificate')->with('error', "Failed to fetch the certificate");
+        }
+    }
+
     public function domains()
     {
         return $this->hasMany(Domains::class);

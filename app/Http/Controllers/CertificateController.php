@@ -14,6 +14,7 @@ use App\Models\LetsEncryptCertificate;
 use App\Models\Domains;
 use App\Environments;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 
 class CertificateController extends Controller
@@ -47,35 +48,26 @@ class CertificateController extends Controller
      */
     public function store(Request $request)
     {
-
-        $domain = $request->domain;
-
         $validateData = $request->validate([
             'domain' => 'required'
         ]);
-
-        $register = exec("php /Users/sidneydesousa/acmephp.phar register esp.sousa@gmail.com");
+        $email = Auth::user()->email;
+        $register = exec("php /Users/sidneydesousa/acmephp.phar register ".$email);
 
         // TODO: validate the domain
         $domain = $request->domain;
 
-        try {
-            // generate the certificate and ensure to only save records in the database once the certificate is generated
-            $certificate = new LetsEncryptCertificate;
+        // generate the certificate and ensure to only save records in the database once the certificate is generated
+        $certificate = new LetsEncryptCertificate;
 
-            $message = $certificate->generate($domain);
-            
-            if(!empty($generate)) {      
-                $certificate->domain = $domain;
-                $certificate->save();
-            }
-            return redirect('/certificates')->with('success', $message);
-
-        } catch(\Exception $e) {
-
-            dd("Something went wrong");
-        }
-
+        $generate = $certificate->generate($domain);
+        if($generate != "null") {      
+            $certificate->domain = $domain;
+            $certificate->save();
+            return redirect('/certificates')->with('success', 'Certificate has been generated for ' . $domain);
+        } else {
+            return redirect('/certificates')->with('error', 'Failed to generate the certificate for' . $domain);
+        }  
 
     }
 
