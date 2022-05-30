@@ -51,8 +51,9 @@ class CertificateController extends Controller
         $validateData = $request->validate([
             'domain' => 'required'
         ]);
+
         $email = Auth::user()->email;
-        $register = exec("php /Users/sidneydesousa/acmephp.phar register ".$email);
+        $register = exec(env('ROOT_DIR') . "register ".$email);
 
         // TODO: validate the domain
         $domain = $request->domain;
