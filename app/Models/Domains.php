@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Domains extends Model
 {
-    protected $fillable = [ 'name', 'status', 'domain', 'toplevel'];
+    protected $guarded = [];
+    
     use HasFactory;
 
     public function let_encrypt_certificate()

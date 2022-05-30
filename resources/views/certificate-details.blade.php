@@ -276,7 +276,7 @@
                                             <input type="hidden" name="domain" value="{{ $certificate->domain }}">
                                         </td>
                                     </tr>
-                                    <tr>
+                                    {{-- <tr>
                                         <td>environment</td>
                                         <td class="pt-4">
                                             <select name="environment" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
@@ -288,7 +288,7 @@
                                                 @endisset
                                             </select>
                                         </td>
-                                    </tr>
+                                    </tr> --}}
                                 </table>
                             </div>
                         </div>
@@ -302,7 +302,7 @@
         </div>
     </div>
 
-    <!-- Add new domain popup -->
+    <!-- Add domains popup -->
     <div class="relative z-10" id="add-new-domain-modal" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display:none;">
 
         <div class="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity"></div>
@@ -314,26 +314,34 @@
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Add New Domain</h3>
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Add domains</h3>
                             </div>
                         </div>
                         <div class="py-8 sm:px-10">
                             <table width="100%">
+                                
                                 <tr>
-                                    <td>name</td>
-                                    <td><input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></td>
-                                </tr>
-                                <tr>
-                                    <td>domain</td>
-                                    <td class="pt-4"><input type="url" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"></td>
+                                    <td class="pt-4">
+                                        <form action="{{ route('store-domains', $certificate->id) }}" method="post">
+                                            @csrf
+                                            <input type="hidden" value="{{ $certificate->domain }}">
+                                            <div class="form-group">
+                                                <label for="">Enter up to 30 domains. Comma separated.</label>
+                                                <textarea 
+                                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
+                                                    name="domains"></textarea>
+                                            </div>
+                                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse justify-end">
+                                                <button type="button" class="mt-3 w-50 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeNewDomainPopup()">Cancel</button>
+                                                <button type="submit" class="w-50 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 sm:ml-3 sm:w-auto sm:text-sm">Add Domain</button>
+                                            </div>
+                                        </form>
+                                    </td>
                                 </tr>
                             </table>
                         </div>
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse justify-end">
-                        <button type="button" class="mt-3 w-50 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeNewDomainPopup()">Cancel</button>
-                        <button type="button" class="w-50 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 sm:ml-3 sm:w-auto sm:text-sm">Add Domain</button>
-                    </div>
+
                 </div>
             </div>
         </div>

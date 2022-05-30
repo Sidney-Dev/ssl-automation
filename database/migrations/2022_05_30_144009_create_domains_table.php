@@ -15,7 +15,6 @@ return new class extends Migration
     {
         Schema::create('domains', function (Blueprint $table) {
             $table->id();
-            $table->string('domain')->unique();
             $table->string('name')->unique();
             $table->bigInteger('lets_encrypt_certificate_id')->unsigned();
             $table->timestamps();

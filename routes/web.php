@@ -35,6 +35,7 @@ Route::get('/create-certificate',  [CertificateController::class, "create"]);//-
 Route::post('/create-certificate',  [CertificateController::class, "store"]);//->middleware('auth');
 
 Route::get('/certificate-details/{certificate}', [CertificateController::class, "show"])->middleware('auth')->name('certificate-details');
+Route::post('/certificate-details/{certificate}/store-domains', [CertificateController::class, "storeDomains"])->name('store-domains');//->middleware('auth')->name('store-domains');
 Route::get('/certificate-delete/{id}', [CertificateController::class, "destroy"])->middleware('auth')->name('certificate-delete');
 Route::get('/certificate-activate/{id}', [CertificateController::class, "activate"])->middleware('auth')->name('certificate-activate');
 Route::get('/certificate-deactivate/{id}', [CertificateController::class, "deactivate"])->middleware('auth')->name('certificate-deactivate');
