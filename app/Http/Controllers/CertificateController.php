@@ -11,7 +11,7 @@ use AcmePhp\Ssl\Signer\DataSigner;
 use App\LetsEncrypt;
 use GuzzleHttp\Client as GuzzleHttpClient;
 use App\Models\LetsEncryptCertificate;
-use App\Domains;
+use App\Models\Domains;
 use App\Environments;
 use Illuminate\Support\Str;
 
@@ -63,7 +63,7 @@ class CertificateController extends Controller
             // generate the certificate and ensure to only save records in the database once the certificate is generated
             $certificate = new LetsEncryptCertificate;
 
-            $generate = $certificate->generate($domain);
+            // $generate = $certificate->generate($domain);
 
             // if($generationResponse == "success") {      
                 $certificate->domain = $domain;
@@ -106,9 +106,12 @@ class CertificateController extends Controller
     public function show(LetsEncryptCertificate $certificate)
     {
         $env = new Environments();
-        $environmentDetails = $env->getEnvironments();
-      
-        return view('certificate-details', compact('certificate','environmentDetails'));
+        // $environmentDetails = $env->getEnvironments();
+        $environmentDetails = "test";
+
+        $domains =$certificate->with('domains')->first();
+        
+        return view('certificate-details', compact('certificate','environmentDetails', 'domains'));
     }
 
     /**
@@ -186,5 +189,23 @@ class CertificateController extends Controller
                 return redirect('/certificates')->with('success', "Certificate has been deactivated");
             }
         } 
+    }
+
+    public function storeDomains(Request $request, LetsEncryptCertificate $certificate) {
+
+        $domains = $certificate->generate($certificate->domain, $request->domains);
+
+        // dd($certificate->id);
+        if(is_array($domains)) {
+            foreach($domains as $domain) {
+                $generate = Domains::create([
+                    'name' => trim($domain),
+                    'lets_encrypt_certificate_id' => $certificate->id
+                ]);
+            }
+        }
+        
+        return redirect()->route("certificate-details", $certificate->id);
+
     }
 }

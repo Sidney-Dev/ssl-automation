@@ -81,19 +81,35 @@ class LetsEncryptCertificate extends Model
         return LetsEncrypt::renewNow($this);
     }
 
-    public function generate($mainDomain) {
-
+    public function generate($mainDomain, $additionalDomains = "") {
+        
+        if(!empty($additionalDomains)) {
+            $additionalDomainsArray = explode(",", $additionalDomains);
+            
+            // additional domains used during authorization
+            $addonDomainsAuthorize = implode(" ", $additionalDomainsArray); // (domaina.com domainb.com)
+            
+            $convertedDomainsArray = [];
+            
+            foreach($additionalDomainsArray as $value) {
+                array_push($convertedDomainsArray, "-a " . trim($value));
+            }
+            
+            // additional domains used during the request
+            $additionalDomains = implode(" ", $convertedDomainsArray); // (-a domaina.com -a domainb.com)
+        }
     
         try {
     
-            $authResponse = $this->certificateAuthorization($mainDomain);
+            $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
             $this->certificateChallenge($authResponse);
             
-            // $certificateRequestCheck = $this->certificateRequestCheck($mainDomain);
+            $certificateRequestCheck = $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
 
-            // $certificateRequest = $this->certificateRequest($mainDomain);
+            // Note: only uncomment this when needed because it generates an actual certificate
+            // $certificateRequest = $this->certificateRequest($mainDomain, $additionalDomains);
     
-            // dd($authResponse);
+            if(!empty($additionalDomains)) return $additionalDomainsArray;
 
         } catch(\Exception $e) {
     
@@ -102,15 +118,15 @@ class LetsEncryptCertificate extends Model
         }
     }
 
-    public function certificateAuthorization($mainDomain) {
+    public function certificateAuthorization($mainDomain, $additionalDomains = "") {
 
-        $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} -n");
+        $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
         $successMessage = "The authorization tokens was successfully fetched!";
 
         // if(Str::contains($authResponse, $successMessage)){
         //     return true;
         // }
-        
+
         return $authResponse;
     }
 
@@ -142,9 +158,9 @@ class LetsEncryptCertificate extends Model
         }
     }
 
-    public function certificateRequestCheck($mainDomain) {
+    public function certificateRequestCheck($mainDomain, $additionalDomains = "") {
 
-        $check = shell_exec(env('ROOT_DIR') . "check {$mainDomain}");
+        $check = shell_exec(env('ROOT_DIR') . "check -s http {$mainDomain} {$additionalDomains}");
         $successMessage = 'The authorization check was successful!';
 
         // if(Str::contains($check, $successMessage)){
@@ -153,11 +169,16 @@ class LetsEncryptCertificate extends Model
         return $check;
     }
 
-    public function certificateRequest($mainDomain) {
+    public function certificateRequest($mainDomain, $additionalDomains) {
 
         try {
 
-            $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain}");
+            $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
+            $successMessage = "The SSL certificate was fetched successfully!";
+
+            // if(Str::contains($request, $successMessage)){
+            //     dd($successMessage);
+            // }
             return $request;
 
         } catch(\Exception $e) {
