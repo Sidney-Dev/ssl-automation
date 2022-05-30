@@ -9,4 +9,9 @@ class Domains extends Model
 {
     protected $fillable = [ 'name', 'status', 'domain', 'toplevel'];
     use HasFactory;
+
+    public function let_encrypt_certificate()
+    {
+        return $this->belongsTo(LetsEncryptCertificate::class);
+    }
 }

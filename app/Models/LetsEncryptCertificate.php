@@ -166,4 +166,9 @@ class LetsEncryptCertificate extends Model
     
         }
     }
+    
+    public function domains()
+    {
+        return $this->hasMany(Domains::class);
+    }
 }

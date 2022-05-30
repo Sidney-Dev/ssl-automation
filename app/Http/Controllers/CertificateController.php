@@ -103,9 +103,9 @@ class CertificateController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(LetsEncryptCertificate $certificate)
     {
-        $certificateInfos = LetsEncryptCertificate::where('id', '=', $id)->first();
+        $certificateInfos = $certificate;
         $env = new Environments();
         $environmentDetails = $env->getEnvironments();
       
