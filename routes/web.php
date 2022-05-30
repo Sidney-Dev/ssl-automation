@@ -30,10 +30,9 @@ Route::middleware([
     })->name('dashboard');
 });
 
-Route::get('/certificates', [CertificateController::class, "index"])->middleware('auth');
-Route::get('/create-certificate',  [CertificateController::class, "create"])->middleware('auth');
-
-Route::post('/create-certificate',  [CertificateController::class, "store"])->middleware('auth');
+Route::get('/certificates', [CertificateController::class, "index"]);//->middleware('auth');
+Route::get('/create-certificate',  [CertificateController::class, "create"]);//->middleware('auth');
+Route::post('/create-certificate',  [CertificateController::class, "store"]);//->middleware('auth');
 
 Route::get('/certificate-details/{id}', [CertificateController::class, "show"])->middleware('auth')->name('certificate-details');
 Route::get('/certificate-delete/{id}', [CertificateController::class, "destroy"])->middleware('auth')->name('certificate-delete');
