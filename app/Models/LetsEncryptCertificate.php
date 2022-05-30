@@ -7,6 +7,7 @@ use App\Collections\LetsEncryptCertificateCollection;
 use App\Facades\LetsEncrypt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -56,6 +57,8 @@ class LetsEncryptCertificate extends Model
         'created' => 'boolean',
     ];
 
+    protected $message = '';
+
     public function newEloquentBuilder($query): LetsEncryptCertificateBuilder
     {
         return new LetsEncryptCertificateBuilder($query);
@@ -82,6 +85,8 @@ class LetsEncryptCertificate extends Model
     }
 
     public function generate($mainDomain, $additionalDomains = "") {
+
+        $addonDomainsAuthorize = '';
         
         if(!empty($additionalDomains)) {
             $additionalDomainsArray = explode(",", $additionalDomains);
@@ -111,6 +116,8 @@ class LetsEncryptCertificate extends Model
     
             if(!empty($additionalDomains)) return $additionalDomainsArray;
 
+            return $this->message;
+
         } catch(\Exception $e) {
     
             var_dump($e->getMessage());
@@ -123,9 +130,9 @@ class LetsEncryptCertificate extends Model
         $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
         $successMessage = "The authorization tokens was successfully fetched!";
 
-        // if(Str::contains($authResponse, $successMessage)){
-        //     return true;
-        // }
+        if(Str::contains($authResponse, $successMessage)){
+            $this->message = $successMessage;
+        }
 
         return $authResponse;
     }
@@ -163,9 +170,9 @@ class LetsEncryptCertificate extends Model
         $check = shell_exec(env('ROOT_DIR') . "check -s http {$mainDomain} {$additionalDomains}");
         $successMessage = 'The authorization check was successful!';
 
-        // if(Str::contains($check, $successMessage)){
-        //     dd($successMessage);
-        // }
+        if(Str::contains($check, $successMessage)){
+            $this->message = $successMessage;
+        }
         return $check;
     }
 
@@ -176,9 +183,10 @@ class LetsEncryptCertificate extends Model
             $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
             $successMessage = "The SSL certificate was fetched successfully!";
 
-            // if(Str::contains($request, $successMessage)){
-            //     dd($successMessage);
-            // }
+            if(Str::contains($request, $successMessage)){
+                $this->message = $successMessage;
+            }
+            
             return $request;
 
         } catch(\Exception $e) {

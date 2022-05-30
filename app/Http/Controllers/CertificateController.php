@@ -54,7 +54,7 @@ class CertificateController extends Controller
             'domain' => 'required'
         ]);
 
-        // $register = exec("php /Users/sidneydesousa/acmephp.phar register esp.sousa@gmail.com");
+        $register = exec("php /Users/sidneydesousa/acmephp.phar register esp.sousa@gmail.com");
 
         // TODO: validate the domain
         $domain = $request->domain;
@@ -63,37 +63,19 @@ class CertificateController extends Controller
             // generate the certificate and ensure to only save records in the database once the certificate is generated
             $certificate = new LetsEncryptCertificate;
 
-            // $generate = $certificate->generate($domain);
-
-            // if($generationResponse == "success") {      
+            $message = $certificate->generate($domain);
+            
+            if(!empty($generate)) {      
                 $certificate->domain = $domain;
                 $certificate->save();
-            // }
-            return redirect('/certificates')->with('success', 'Certificate has been generated for ' . $request->domain);
+            }
+            return redirect('/certificates')->with('success', $message);
 
         } catch(\Exception $e) {
 
             dd("Something went wrong");
         }
-        // $new = new LetsEncrypt(
-        //     new SecureHttpClientFactory(
-        //         new GuzzleHttpClient(),
-        //         new Base64SafeEncoder(),
-        //         new KeyParser(),
-        //         new DataSigner(),
-        //         new ServerErrorHandler()
-        //     )
-        // );
-        // $validateData = $request->validate([
-        //     'domain' => 'required'
-        // ]);
-     
-        // try {
-        //     $new->createNow($request->domain);
-        //     return redirect('/certificates')->with('success', 'Certificate has been generated for ' . $request->domain);
-        // } catch(\Exception $e) {
-        //     return redirect('/certificates')->with('error','Failed to generate a certificate for ' . $request->domain);
-        // }      
+
 
     }
 
