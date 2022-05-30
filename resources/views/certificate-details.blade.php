@@ -68,13 +68,13 @@
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                             <table class="w-full text-sm text-left text-gray-500">
                                 <tbody>
-                                    @isset($certificateInfos)
+                                    @isset($certificate)
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4" width="30%">
                                             ID
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->id }}
+                                            {{ $certificate->id }}
                                         </td>
                                     </tr>
                                     <!-- <tr class="bg-white border-b hover:bg-gray-50">
@@ -90,7 +90,7 @@
                                             domain
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->domain }}
+                                            {{ $certificate->domain }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -98,7 +98,7 @@
                                             status
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->created == 1 ? 'Success' : 'Failed'  }}
+                                            {{ $certificate->created == 1 ? 'Success' : 'Failed'  }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -106,7 +106,7 @@
                                             last_renewed_at
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->last_renewed_at }}
+                                            {{ $certificate->last_renewed_at }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -114,7 +114,7 @@
                                             fullchain_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->fullchain_path }}
+                                            {{ $certificate->fullchain_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -122,7 +122,7 @@
                                             chain_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->chain_path }}
+                                            {{ $certificate->chain_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -130,7 +130,7 @@
                                             cert_path
                                         </td>
                                         <td class="px-6 py-4">
-                                            {{ $certificateInfos->cert_path }}
+                                            {{ $certificate->cert_path }}
                                         </td>
                                     </tr>
                                     <tr class="bg-white hover:bg-gray-50">
@@ -138,7 +138,7 @@
                                             privkey_path
                                         </td>
                                         <td class="px-6 py-4">
-                                        {{ $certificateInfos->privkey_path }}
+                                        {{ $certificate->privkey_path }}
                                         </td>
                                     </tr>
                                     @endisset
@@ -199,7 +199,7 @@
 
         <div class="fixed z-10 inset-0 overflow-y-auto">
             <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
-                <form action="{{ route('certificate-delete', $certificateInfos->id) }}" method="post">
+                <form action="{{ route('certificate-delete', $certificate->id) }}" method="post">
                     @csrf
                     <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
                         <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -273,7 +273,7 @@
                                         <td>certificate name</td>
                                         <td>
                                             <input type="text" name="cert_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                            <input type="hidden" name="domain" value="{{ $certificateInfos->domain }}">
+                                            <input type="hidden" name="domain" value="{{ $certificate->domain }}">
                                         </td>
                                     </tr>
                                     <tr>

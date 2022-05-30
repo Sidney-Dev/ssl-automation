@@ -105,11 +105,10 @@ class CertificateController extends Controller
      */
     public function show(LetsEncryptCertificate $certificate)
     {
-        $certificateInfos = $certificate;
         $env = new Environments();
         $environmentDetails = $env->getEnvironments();
       
-        return view('certificate-details', compact('certificateInfos','environmentDetails'));
+        return view('certificate-details', compact('certificate','environmentDetails'));
     }
 
     /**
