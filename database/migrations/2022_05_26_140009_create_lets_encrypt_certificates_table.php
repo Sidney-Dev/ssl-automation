@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->timestamps();
             $table->softDeletes();
-            $table->string('domain');
+            $table->string('domain')->unique();
             $table->timestamp('last_renewed_at')->nullable();
             $table->boolean('created')->default(false);
             $table->string('fullchain_path')->nullable();

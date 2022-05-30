@@ -80,4 +80,9 @@ class LetsEncryptCertificate extends Model
     {
         return LetsEncrypt::renewNow($this);
     }
+
+    public function domains()
+    {
+        return $this->hasMany(Domains::class);
+    }
 }
