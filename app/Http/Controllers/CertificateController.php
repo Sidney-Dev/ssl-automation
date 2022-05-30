@@ -108,8 +108,10 @@ class CertificateController extends Controller
         $env = new Environments();
         // $environmentDetails = $env->getEnvironments();
         $environmentDetails = "test";
-      
-        return view('certificate-details', compact('certificate','environmentDetails'));
+
+        $domains =$certificate->with('domains')->first();
+        
+        return view('certificate-details', compact('certificate','environmentDetails', 'domains'));
     }
 
     /**

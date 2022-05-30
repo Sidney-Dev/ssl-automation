@@ -101,10 +101,10 @@ class LetsEncryptCertificate extends Model
     
         try {
     
-            // $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
-            // $this->certificateChallenge($authResponse);
+            $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
+            $this->certificateChallenge($authResponse);
             
-            // $certificateRequestCheck = $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
+            $certificateRequestCheck = $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
 
             // Note: only uncomment this when needed because it generates an actual certificate
             // $certificateRequest = $this->certificateRequest($mainDomain, $additionalDomains);
