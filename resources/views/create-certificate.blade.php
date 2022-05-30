@@ -46,6 +46,10 @@
         @if ($errors->has('domain'))
             <p class="block mt-2 text-sm text-red-600 text-center dark:text-red-500">{{ $errors->first('domain') }}</p>
         @endif
+
+        @if (Session::has('error'))
+            <p class="block mt-2 text-sm text-red-600 text-center dark:text-red-500">{{ Session::get('error') }}</p>
+        @endif
         <form method="post" action="{{ url('/create-certificate') }}">
             @csrf
             <div class="py-6">
