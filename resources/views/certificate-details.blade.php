@@ -157,7 +157,7 @@
                     <div>This certificate does not have any additional domains</div>
                 @endif
                 <div class="flex justify-end max-w-7xl mx-auto mt-2">
-                    <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none" onclick="openNewDomainPopup()">Add New Domain</button>
+                    <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none" onclick="openNewDomainPopup('{{ $domains->domains }}')">Add New Domain</button>
                 </div>
                 
                 <div class="relative overflow-x-auto shadow-md sm:rounded-lg mt-6">
@@ -286,7 +286,7 @@
                                             <input type="hidden" name="domain" value="{{ $certificate->domain }}">
                                         </td>
                                     </tr>
-                                    {{-- <tr>
+                                    <tr>
                                         <td>environment</td>
                                         <td class="pt-4">
                                             <select name="environment" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
@@ -298,7 +298,7 @@
                                                 @endisset
                                             </select>
                                         </td>
-                                    </tr> --}}
+                                    </tr>
                                 </table>
                             </div>
                         </div>
@@ -339,7 +339,7 @@
                                                 <label for="">Enter up to 30 domains. Comma separated.</label>
                                                 <textarea 
                                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" 
-                                                    name="domains"></textarea>
+                                                    name="domains" id="subdomains"></textarea>
                                             </div>
                                             <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse justify-end">
                                                 <button type="button" class="mt-3 w-50 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeNewDomainPopup()">Cancel</button>
@@ -391,7 +391,25 @@
         }
 
         // Add new domain
-        function openNewDomainPopup() {
+        function openNewDomainPopup($domains) {
+            if ($domains != "") {
+                var $subdomains = "";
+                var $objDomains = JSON.parse($domains);
+
+                for(var i = 0; i < $objDomains.length; i++) {
+                    for (var $key in $objDomains[i]) {
+                        if ($key == "name") $subdomains += $objDomains[i][$key] + ","
+                    }
+                }
+
+                $subdomains = $subdomains.replace(/,\s*$/, "");
+            }
+            
+            const textarea = document.getElementById('subdomains');
+
+            textarea.value += $subdomains;
+
+
             document.getElementById("add-new-domain-modal").style.display = "block";
         }
 

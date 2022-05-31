@@ -15,6 +15,7 @@ use App\Models\Domains;
 use App\Environments;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 
 class CertificateController extends Controller
@@ -51,7 +52,7 @@ class CertificateController extends Controller
         $validateData = $request->validate([
             'domain' => 'required'
         ]);
-
+       
         $email = Auth::user()->email;
         $register = exec(env('ROOT_DIR') . "register ".$email);
 
@@ -81,8 +82,8 @@ class CertificateController extends Controller
     public function show(LetsEncryptCertificate $certificate)
     {
         $env = new Environments();
-        // $environmentDetails = $env->getEnvironments();
-        $environmentDetails = "test";
+        $environmentDetails = $env->getEnvironments();
+        // $environmentDetails = "test";
 
         $domains =$certificate->with('domains')->first();
         
@@ -119,19 +120,15 @@ class CertificateController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
-    {
-        // if (LetsEncryptCertificate::where('id',$id)->delete()) {
-        //     return redirect('/certificates')->with('success', 'Domain deleted');
-        // } else {
-        //     return redirect('/certificates')->with('error', 'Domain could not be deleted');
-        // }
-       
+    { 
         $getSlugAndEnvId = LetsEncryptCertificate::where('id',$id)->first();
+       
         $env = new Environments();
         $response = $env->certificateDeletion($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
         
         if ($response == true) {
-            // LetsEncryptCertificate::where('id',$id)->delete();
+            LetsEncryptCertificate::where('id',$id)->delete(); // it hides from showing but the record is still in the DB
+            $this->removeFiles($getSlugAndEnvId->domain); // remove directories
             return redirect('/certificates')->with('success', 'Certificate has been deleted');
         }
     }
@@ -182,5 +179,13 @@ class CertificateController extends Controller
         
         return redirect()->route("certificate-details", $certificate->id);
 
+    }
+
+    public function removeFiles($domain) {
+        $path = env('MAIN_DIR').'/.acmephp/master/certs/'. $domain;
+
+        if (File::exists($path)) {
+            File::deleteDirectory($path);
+        }
     }
 }
