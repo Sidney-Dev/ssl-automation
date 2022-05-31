@@ -57,6 +57,8 @@ class LetsEncryptCertificate extends Model
         'created' => 'boolean',
     ];
 
+    protected $message = '';
+
     public function newEloquentBuilder($query): LetsEncryptCertificateBuilder
     {
         return new LetsEncryptCertificateBuilder($query);
@@ -109,20 +111,22 @@ class LetsEncryptCertificate extends Model
         $certificateRequestCheck = $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
 
         // Note: only uncomment this when needed because it generates an actual certificate
-        // $certificateRequest = $this->certificateRequest($mainDomain, $additionalDomains);
+        $certificateRequest = $this->certificateRequest($mainDomain, $additionalDomains);
 
         if (!empty($additionalDomains)) return $additionalDomainsArray;
+        return $this->message;
     }
 
     public function certificateAuthorization($mainDomain, $additionalDomains = "")
     {
         $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
         $successMessage = "The authorization tokens was successfully fetched!";
-
+        
         if (Str::contains($authResponse, $successMessage)) {
-            return $authResponse;
+            return "success";
+
         } else {
-            return redirect('/create-certificate')->with('error', "Failed to authorize the token");
+            return redirect('/create-certificate')->with('error', "Certificate authorization error");
         }
     }
 
@@ -166,9 +170,10 @@ class LetsEncryptCertificate extends Model
         $successMessage = 'The authorization check was successful!';
 
         if (Str::contains($check, $successMessage)) {
-            return $check;
+            $this->message = "success";
+            return $this->message;
         } else {
-            return redirect('/create-certificate')->with('error', "Failed to authorize the token");
+            return redirect('/create-certificate')->with('error', "Request challenge did not pass");
         }
     }
 
@@ -178,7 +183,8 @@ class LetsEncryptCertificate extends Model
         $successMessage = "The SSL certificate was fetched successfully!";
 
         if (Str::contains($request, $successMessage)) {
-            return $request;
+            $this->message = "success";
+            return $this->message;
         } else {
             return redirect('/create-certificate')->with('error', "Failed to fetch the certificate");
         }

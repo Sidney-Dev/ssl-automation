@@ -37,11 +37,11 @@ class Environments
 
     public function addCertificateToEnvironment($certName, $envID, $domain)
     {
-        $cert = urlencode(file_get_contents(storage_path('app/letsencrypt/certificates/' . $domain . '/cert.pem')));
-        $chain = urlencode(file_get_contents(storage_path('app/letsencrypt/certificates/' . $domain . '/chain.pem')));
-        $key = urlencode(file_get_contents(storage_path('app/letsencrypt/certificates/' . $domain . '/privkey.pem')));
+        
+        $cert = urlencode(file_get_contents(env('MAIN_DIR').'/.acmephp/master/certs/'. $domain .'/public/cert.pem'));
+        $chain = urlencode(file_get_contents(env('MAIN_DIR').'/.acmephp/master/certs/'. $domain . '/public/chain.pem'));
+        $key = urlencode(file_get_contents(env('MAIN_DIR').'/.acmephp/master/certs/'. $domain . '/private/key.private.pem'));
 
-       
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
