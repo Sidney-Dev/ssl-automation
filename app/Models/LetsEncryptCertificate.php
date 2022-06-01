@@ -57,7 +57,10 @@ class LetsEncryptCertificate extends Model
         'created' => 'boolean',
     ];
 
+    protected $certificate_validation_date = null;
+
     protected $message = '';
+    public $error = false;
 
     public function newEloquentBuilder($query): LetsEncryptCertificateBuilder
     {
@@ -105,10 +108,10 @@ class LetsEncryptCertificate extends Model
         }
         
         $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
-        
+       
         $this->certificateChallenge($authResponse);
 
-        $certificateRequestCheck = $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
+        $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
 
         // Note: only uncomment this when needed because it generates an actual certificate
         $certificateRequest = $this->certificateRequest($mainDomain, $additionalDomains);
@@ -123,18 +126,19 @@ class LetsEncryptCertificate extends Model
         $successMessage = "The authorization tokens was successfully fetched!";
         
         if (Str::contains($authResponse, $successMessage)) {
-            return "success";
+            return $authResponse;
 
         } else {
-            return redirect('/create-certificate')->with('error', "Certificate authorization error");
+            $this->error = true;
+            // return redirect('/create-certificate')->with('error', "Certificate authorization error");
         }
     }
 
-    public function certificateChallenge($authResponse)
+    public function certificateChallenge($authResponse): void
     {
         $matches = [];
         preg_match_all('/{(.*?)}}/', $authResponse, $matches);
-
+        
         foreach ($matches[0] as $match) {
 
             $data = json_decode($match);
@@ -158,7 +162,7 @@ class LetsEncryptCertificate extends Model
             curl_close($curl);
 
             if ($http_code != "200") {
-                return redirect('/create-certificate')->with('error', "Failed to load the challenge for ". $data->domain);
+                $this->error = true;
             } 
            
         }
@@ -173,21 +177,32 @@ class LetsEncryptCertificate extends Model
             $this->message = "success";
             return $this->message;
         } else {
-            return redirect('/create-certificate')->with('error', "Request challenge did not pass");
+            $this->error = true;
         }
     }
 
     public function certificateRequest($mainDomain, $additionalDomains)
     {
         $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
+        dd($request);
         $successMessage = "The SSL certificate was fetched successfully!";
 
         if (Str::contains($request, $successMessage)) {
+            $this->setCertificateValidationDate($request);
             $this->message = "success";
             return $this->message;
         } else {
-            return redirect('/create-certificate')->with('error', "Failed to fetch the certificate");
+            $this->error = true;
         }
+    }
+
+    public function setCertificateValidationDate($response) {
+        preg_match('/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/',$response,$validation_date);
+        $this->certificate_validation_date = current($validation_date);
+    }
+
+    public function getCertificateValidationDate() {
+       return $this->certificate_validation_date;
     }
 
     public function domains()

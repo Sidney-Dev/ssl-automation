@@ -62,6 +62,9 @@
                                             LAST RENEWED
                                         </th>
                                         <th scope="col" class="px-6 py-3">
+                                            TOTAL SUBDOMAINS
+                                        </th>
+                                        <th scope="col" class="px-6 py-3">
                                         </th>
                                     </tr>
                                 </thead>
@@ -92,6 +95,9 @@
                                         @endif
                                         <td class="px-6 py-4">
                                         {{ $certInfo->last_renewed_at }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                        {{ count($certInfo->domains) }}
                                         </td>
                                         <td class="px-6 py-4 text-right">
                                             <a href="{{ route('certificate-details', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">View</a>
