@@ -19,6 +19,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->string('domain')->unique();
             $table->timestamp('last_renewed_at')->nullable();
+            $table->timestamp('certificate_validation_date')->nullable();
             $table->boolean('created')->default(false);
             $table->string('fullchain_path')->nullable();
             $table->string('chain_path')->nullable();

@@ -44,9 +44,6 @@
                 <div id="editMenu" class="absolute right-0 z-10 hidden bg-white divide-y divide-gray-100 rounded shadow w-44 mt-1">
                     <ul class="py-1 text-sm text-gray-700" aria-labelledby="dropdownDefault">
                         <li>
-                            <a href="#" class="block px-4 py-2 text-red-600 hover:bg-gray-100" onclick="openDeletePopup()">Delete certificate</a>
-                        </li>
-                        <li>
                             <a href="#" class="block px-4 py-2 hover:bg-gray-100" onclick="openRenewPopup()">Renew certificate</a>
                         </li>
                         <li>

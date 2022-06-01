@@ -16,6 +16,8 @@ use App\Environments;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use App\Exceptions\DomainAlreadyExists;
+use App\Exceptions\InvalidDomainException;
 
 
 class CertificateController extends Controller
@@ -27,7 +29,8 @@ class CertificateController extends Controller
      */
     public function index()
     {
-        $allCertificateInfos = LetsEncryptCertificate::get();
+        $allCertificateInfos = LetsEncryptCertificate::with('domains')->get();
+    
         return view('certificates', compact("allCertificateInfos"));
     }
 
@@ -49,28 +52,38 @@ class CertificateController extends Controller
      */
     public function store(Request $request)
     {
-        $validateData = $request->validate([
+        $request->validate([
             'domain' => 'required'
         ]);
-       
-        $email = Auth::user()->email;
-        $register = exec(env('ROOT_DIR') . "register ".$email);
+
 
         // TODO: validate the domain
         $domain = $request->domain;
 
+        $this->validateDomain($domain);
+        $this->checkDomainDoesNotExist($domain);
+
+        $email = Auth::user()->email;
+        exec(env('ROOT_DIR') . "register ".$email);
+
         // generate the certificate and ensure to only save records in the database once the certificate is generated
         $certificate = new LetsEncryptCertificate;
 
-        $generate = $certificate->generate($domain);
-        if($generate != "null") {      
+        $certificate->generate($domain);
+  
+        if($certificate->error == false ) {      
             $certificate->domain = $domain;
+            $certificate->certificate_validation_date = $certificate->certificate_validation_date;
+            $certificate->fullchain_path = env('MAIN_DIR').'/.acmephp/master/certs/'. $domain . '/public/fullchain.pem';
+            $certificate->chain_path = env('MAIN_DIR').'/.acmephp/master/certs/'. $domain . '/public/chain.pem';
+            $certificate->cert_path = env('MAIN_DIR').'/.acmephp/master/certs/'. $domain .'/public/cert.pem';
+            $certificate->privkey_path = env('MAIN_DIR').'/.acmephp/master/certs/'. $domain . '/private/key.private.pem';
+
             $certificate->save();
             return redirect('/certificates')->with('success', 'Certificate has been generated for ' . $domain);
         } else {
-            return redirect('/certificates')->with('error', 'Failed to generate the certificate for' . $domain);
+            return redirect('/certificates')->with('error', 'Failed to generate the certificate for ' . $domain);
         }  
-
     }
 
     /**
@@ -127,8 +140,8 @@ class CertificateController extends Controller
         $response = $env->certificateDeletion($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
         
         if ($response == true) {
-            LetsEncryptCertificate::where('id',$id)->delete(); // it hides from showing but the record is still in the DB
-            $this->removeFiles($getSlugAndEnvId->domain); // remove directories
+            // LetsEncryptCertificate::where('id',$id)->delete(); // it hides from showing but the record is still in the DB
+            // $this->removeFiles($getSlugAndEnvId->domain); // remove directories
             return redirect('/certificates')->with('success', 'Certificate has been deleted');
         }
     }
@@ -186,6 +199,30 @@ class CertificateController extends Controller
 
         if (File::exists($path)) {
             File::deleteDirectory($path);
+        }
+    }
+
+    /**
+     * Checks mainly to prevent API errors when a user passes e.g. 'https://domain.com' as a domain. This should be
+     * 'domain.com' instead.
+     * @param string $domain
+     * @throws InvalidDomainException
+     */
+    public function validateDomain(string $domain): void
+    {
+        if (Str::contains($domain, [':', '/', ','])) {
+            throw new InvalidDomainException($domain);
+        }
+    }
+
+    /**
+     * @param string $domain
+     * @throws DomainAlreadyExists
+     */
+    public function checkDomainDoesNotExist(string $domain): void
+    {
+        if (LetsEncryptCertificate::withTrashed()->where('domain', $domain)->exists()) {
+            throw new DomainAlreadyExists($domain);
         }
     }
 }
