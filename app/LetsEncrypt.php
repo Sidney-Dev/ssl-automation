@@ -2,217 +2,137 @@
 
 namespace App;
 
-use AcmePhp\Core\AcmeClient;
-use AcmePhp\Core\Http\SecureHttpClientFactory;
-use AcmePhp\Ssl\Generator\KeyPairGenerator;
-use AcmePhp\Ssl\KeyPair;
-use AcmePhp\Ssl\PrivateKey;
-use AcmePhp\Ssl\PublicKey;
-use App\Exceptions\DomainAlreadyExists;
-use App\Exceptions\InvalidDomainException;
-use App\Exceptions\InvalidKeyPairConfiguration;
-use App\Jobs\RegisterAccount;
-use App\Jobs\RequestAuthorization;
-use App\Jobs\RequestCertificate;
-use App\Models\LetsEncryptCertificate;
-use Illuminate\Foundation\Bus\PendingDispatch;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class LetsEncrypt
 {
-    /** @var \AcmePhp\Core\Http\SecureHttpClientFactory */
-    protected $factory;
+    public $certificateValidationDate = null;
 
-    /**
-     * @var LetsEncrypt
-     */
-    private static $instance;
+    protected $message = '';
+    public $error = false;
+    public $errorMessage = null;
 
-    /**
-     * LetsEncrypt constructor.
-     * @param SecureHttpClientFactory $factory
-     */
-    public function __construct(SecureHttpClientFactory $factory)
+
+    public function generate($mainDomain, $additionalDomains = "")
     {
-        $this->factory = $factory;
-        self::$instance = $this;
+        $addonDomainsAuthorize = null;
+
+        if (!empty($additionalDomains)) {
+            
+            $additionalDomainsArray = explode("\r\n", trim($additionalDomains));
+            
+            // additional domains used during authorization
+            $addonDomainsAuthorize = implode(" ", $additionalDomainsArray); // (domaina.com domainb.com)
+            
+            $convertedDomainsArray = [];
+
+            foreach ($additionalDomainsArray as $value) {
+                array_push($convertedDomainsArray, "-a " . trim($value));
+            }
+            
+            // additional domains used during the request
+            $additionalDomains = implode(" ", $convertedDomainsArray); // (-a domaina.com -a domainb.com)
+        }
+    
+        $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
+
+        $this->certificateChallenge($authResponse);
+
+        $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
+
+        // Note: only uncomment this when needed because it generates an actual certificate
+        $this->certificateRequest($mainDomain, $additionalDomains);
+
+        if (!empty($additionalDomains)) return $additionalDomainsArray;
+        return $this->message;
     }
 
-    /**
-     * Creates a new certificate. The heavy work is pushed on the queue.
-     * @param string $domain
-     * @param array $chain
-     * @return array{LetsEncryptCertificate, PendingDispatch}
-     * @throws DomainAlreadyExists
-     * @throws InvalidDomainException
-     */
-    public function create(string $domain, array $chain = []): array
+    public function certificateAuthorization($mainDomain, $additionalDomains = "")
     {
-        self::validateDomain($domain);
-        self::checkDomainDoesNotExist($domain);
+        $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
+        $successMessage = "The authorization tokens was successfully fetched!";
 
-        $email = config('lets_encrypt.universal_email_address');
-
-        $certificate = LetsEncryptCertificate::create([
-            'domain' => $domain,
-        ]);
-
-        return [$certificate, RegisterAccount::withChain(array_merge([
-            new RequestAuthorization($certificate),
-            new RequestCertificate($certificate),
-        ], $chain))->dispatch($email)];
+        if (Str::contains($authResponse, $successMessage)) {
+            return $authResponse;
+        } else {
+            $this->error = true;
+            $this->errorMessage = "Failed to fetch the authorization token";
+        }
     }
 
-    /**
-     * Creates a certificate synchronously: it's not pushed on the queue.
-     * This is not recommended in general, but can be useful if you're running it from the command
-     * line or when you're trying to debug.
-     * @param string $domain
-     * @return LetsEncryptCertificate
-     * @throws DomainAlreadyExists
-     * @throws InvalidDomainException
-     */
-    public function createNow(string $domain): LetsEncryptCertificate
+    public function certificateChallenge($authResponse): void
     {
-        self::validateDomain($domain);
-        self::checkDomainDoesNotExist($domain);
+        $matches = [];
+        preg_match_all('/{(.*?)}}/', $authResponse, $matches);
 
-        $email = config('lets_encrypt.universal_email_address');
+        foreach ($matches[0] as $match) {
 
-        $certificate = LetsEncryptCertificate::create([
-            'domain' => $domain,
-        ]);
+            $data = json_decode($match);
 
-        RegisterAccount::dispatchNow($email);
-        RequestAuthorization::dispatchNow($certificate);
-        RequestCertificate::dispatchNow($certificate);
+            $curl = curl_init();
 
-        return $certificate->refresh();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'http://' . $data->domain . '/letsencrypt/token?token=' . $data->challenge->token . '&payload=' . $data->challenge->payload,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+            ));
+
+            $response = curl_exec($curl);
+            $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+
+            curl_close($curl);
+
+            if ($http_code != "200") {
+                $this->error = true;
+                $this->errorMessage = "Failed to upload the challenge on the server";
+            }
+        }
     }
 
-    /**
-     * Checks mainly to prevent API errors when a user passes e.g. 'https://domain.com' as a domain. This should be
-     * 'domain.com' instead.
-     * @param string $domain
-     * @throws InvalidDomainException
-     */
-    public function validateDomain(string $domain): void
+    public function certificateRequestCheck($mainDomain, $additionalDomains = "")
     {
-        if (Str::contains($domain, [':', '/', ','])) {
-            throw new InvalidDomainException($domain);
+        $check = shell_exec(env('ROOT_DIR') . "check -s http {$mainDomain} {$additionalDomains}");
+        $successMessage = 'The authorization check was successful!';
+
+        if (Str::contains($check, $successMessage)) {
+            $this->message = "success";
+            return $this->message;
+        } else {
+            $this->error = true;
+            $this->errorMessage = "The authorization check failed";
+        }
+    }
+
+    public function certificateRequest($mainDomain, $additionalDomains)
+    {
+        $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
+        
+        $successMessage = "The SSL certificate was fetched successfully!";
+
+        if (Str::contains($request, $successMessage)) {
+            $this->setCertificateValidationDate($request);
+            $this->message = "success";
+            return $this->message;
+        } else {
+            $this->error = true;
+            $this->errorMessage = "Failed to fetch the certificate";
         }
     }
 
     /**
-     * @param string $domain
-     * @throws DomainAlreadyExists
+     * Extracts the certificate validation date from the lets encrypt server response.
+     * @param $response
+     * @return void
      */
-    public function checkDomainDoesNotExist(string $domain): void
+
+    public function setCertificateValidationDate($response): void
     {
-        if (LetsEncryptCertificate::withTrashed()->where('domain', $domain)->exists()) {
-            throw new DomainAlreadyExists($domain);
-        }
-    }
-
-    /**
-     * @param string|LetsEncryptCertificate $domain
-     * @param array $chain
-     * @return mixed
-     * @throws InvalidDomainException
-     */
-    public function renew($domain, array $chain = [])
-    {
-        if (! $domain instanceof LetsEncryptCertificate) {
-            $domain = LetsEncryptCertificate::where('domain', $domain)->first();
-        }
-
-        $email = config('lets_encrypt.universal_email_address', null);
-
-        return RegisterAccount::withChain(array_merge([
-            new RequestAuthorization($domain),
-            new RequestCertificate($domain),
-        ], $chain))->dispatch($email);
-    }
-
-    /**
-     * @param string|LetsEncryptCertificate $domain
-     * @return LetsEncryptCertificate
-     * @throws InvalidDomainException
-     */
-    public function renewNow($domain): LetsEncryptCertificate
-    {
-        if (! $domain instanceof LetsEncryptCertificate) {
-            $domain = LetsEncryptCertificate::where('domain', $domain)->first();
-        }
-
-        $email = config('lets_encrypt.universal_email_address', null);
-
-        RegisterAccount::dispatchNow($email);
-        RequestAuthorization::dispatchNow($domain);
-        RequestCertificate::dispatchNow($domain);
-
-        return $domain;
-    }
-
-    /**
-     * @return AcmeClient
-     * @throws InvalidKeyPairConfiguration
-     */
-    public function createClient(): AcmeClient
-    {
-        $keyPair = self::getKeyPair();
-        $secureHttpClient = self::$instance->factory->createSecureHttpClient($keyPair);
-
-        return new AcmeClient(
-            $secureHttpClient,
-            config('lets_encrypt.api_url', 'https://acme-staging-v02.api.letsencrypt.org/directory')
-        );
-    }
-
-    /**
-     * Retrieves a key pair or creates a new one if it does not exist.
-     * @return KeyPair
-     * @throws InvalidKeyPairConfiguration
-     */
-    protected function getKeyPair(): KeyPair
-    {
-        $publicKeyPath = config('lets_encrypt.public_key_path', storage_path('app/lets-encrypt/keys/account.pub.pem'));
-        $privateKeyPath = config('lets_encrypt.private_key_path', storage_path('app/lets-encrypt/keys/account.pem'));
-
-        if (! file_exists($privateKeyPath) && ! file_exists($publicKeyPath)) {
-            $keyPairGenerator = new KeyPairGenerator();
-            $keyPair = $keyPairGenerator->generateKeyPair();
-
-            File::ensureDirectoryExists(File::dirname($publicKeyPath));
-            File::ensureDirectoryExists(File::dirname($privateKeyPath));
-
-            file_put_contents($publicKeyPath, $keyPair->getPublicKey()->getPEM());
-            file_put_contents($privateKeyPath, $keyPair->getPrivateKey()->getPEM());
-
-            return $keyPair;
-        }
-
-        if (! file_exists($privateKeyPath)) {
-            throw new InvalidKeyPairConfiguration('Private key does not exist but public key does.');
-        }
-
-        if (! file_exists($publicKeyPath)) {
-            throw new InvalidKeyPairConfiguration('Public key does not exist but private key does.');
-        }
-
-        $publicKey = new PublicKey(file_get_contents($publicKeyPath));
-        $privateKey = new PrivateKey(file_get_contents($privateKeyPath));
-
-        return new KeyPair($publicKey, $privateKey);
-    }
-
-    /**
-     * @param string $domain
-     * @return PendingCertificate
-     */
-    public function certificate(string $domain): PendingCertificate
-    {
-        return new PendingCertificate($domain);
+        preg_match('/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/', $response, $validation_date);
+        $this->certificateValidationDate = date('Y-m-d H:i:s', strtotime(current($validation_date)));
     }
 }

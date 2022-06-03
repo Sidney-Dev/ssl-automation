@@ -36,9 +36,11 @@ Route::post('/create-certificate',  [CertificateController::class, "store"]);//-
 
 Route::get('/certificate-details/{certificate}', [CertificateController::class, "show"])->middleware('auth')->name('certificate-details');
 Route::post('/certificate-details/{certificate}/store-domains', [CertificateController::class, "storeDomains"])->name('store-domains');//->middleware('auth')->name('store-domains');
+Route::post('/certificate-details/{certificate}/delete-domains', [CertificateController::class, "deleteDomains"])->name('delete-domains');//->middleware('auth')->name('store-domains');
 Route::get('/certificate-delete/{id}', [CertificateController::class, "destroy"])->middleware('auth')->name('certificate-delete');
 Route::get('/certificate-activate/{id}', [CertificateController::class, "activate"])->middleware('auth')->name('certificate-activate');
 Route::get('/certificate-deactivate/{id}', [CertificateController::class, "deactivate"])->middleware('auth')->name('certificate-deactivate');
+Route::post('/certificate-install', [CertificateController::class, "addCertificateToEnvironment"])->middleware('auth');
 
 Route::get('/domain-details', function () {
     return view('domain-details');
@@ -51,7 +53,4 @@ Route::get('/users', [UserController::class, "index"])->middleware('auth');
 
 
 Route::get('/environments', [EnvironmentController::class, "index"])->middleware('auth');
-
-Route::post('/environments/install', [EnvironmentController::class, "addCertificateToEnvironment"])->middleware('auth');
-
 Route::get('/environments/certificate', [EnvironmentController::class, "getCertificateID"])->middleware('auth');
