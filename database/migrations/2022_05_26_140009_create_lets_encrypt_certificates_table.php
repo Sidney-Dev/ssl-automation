@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('chain_path')->nullable();
             $table->string('cert_path')->nullable();
             $table->string('privkey_path')->nullable();
-            $table->enum('status',['error','pending','success']);
+            $table->enum('status',['error','pending','installed','activated','success']);
             $table->bigInteger('slug')->nullable();
             $table->string('environmentID')->nullable();
         });

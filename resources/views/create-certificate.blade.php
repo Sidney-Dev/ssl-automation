@@ -67,7 +67,7 @@
 
             <div class="flex justify-end max-w-7xl mx-auto">
                 <a href="/certificates" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">Cancel</a>
-                <input type="submit" name="create" value="Create Certificate" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2">
+                <button type="submit" onclick="this.classList.toggle('button--loading')" name="create" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2"><span class='loader'>Create Certificate</span></button>
             </div>
         </form>
 

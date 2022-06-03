@@ -9,6 +9,7 @@ use App\Exceptions\CertificateNotInstalledException;
 use App\Exceptions\CertificateNotDeactivatedException;
 use App\Exceptions\CertificateNotDeletedException;
 use App\Exceptions\EnvironmentNotFoundException;
+use App\Exceptions\ClearDomainCacheException;
 
 class Environments
 {
@@ -41,11 +42,11 @@ class Environments
         $cert = urlencode(file_get_contents(env('MAIN_DIR').'/.acmephp/master/certs/'. $domain .'/public/cert.pem'));
         $chain = urlencode(file_get_contents(env('MAIN_DIR').'/.acmephp/master/certs/'. $domain . '/public/chain.pem'));
         $key = urlencode(file_get_contents(env('MAIN_DIR').'/.acmephp/master/certs/'. $domain . '/private/key.private.pem'));
-
+    
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => 'cloud.acquia.com/api/environments/' . $envID . '/ssl/certificates',
+            CURLOPT_URL => 'https://cloud.acquia.com/api/environments/' . $envID . '/ssl/certificates',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -86,6 +87,7 @@ class Environments
             ]);
 
             $httpcode = $response->getStatusCode();
+
             if ($httpcode == "202") {
                 return true;
             }
@@ -93,6 +95,47 @@ class Environments
         } catch (\Exception $e) {
             throw new CertificateNotActivatedException();
         }
+    }
+
+    public function clearDomainCache($envID,$certificateID)
+    {
+        $domains = LetsEncryptCertificate::where('slug',$certificateID)->with('domains')->first();
+        $allDomains[] = $domains->domain;
+  
+        foreach ($domains->domains as $domain) {
+            array_push($allDomains,$domain->name);
+        }
+
+        $curl = curl_init();
+
+        $post = [
+            'domains' => $allDomains
+        ];
+        
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://cloud.acquia.com/api/environments/' . $envID . '/actions/clear-caches',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => json_encode($post),
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: Bearer ' . $this->authenticationToken,
+                'Content-Type: application/json'
+            ),
+        ));
+
+        $response = curl_exec($curl);
+        curl_close($curl);
+
+        if (strpos($response,"error") === false) {
+            return true;
+        } else {
+            throw new ClearDomainCacheException();
+        } 
     }
 
     public function certificateDeactivation($envID, $certificateID)
