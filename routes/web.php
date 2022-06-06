@@ -20,17 +20,25 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Route::middleware([
+//     'auth:sanctum',
+//     config('jetstream.auth_session'),
+//     'verified'
+// ])->group(function () {
+//     Route::get('/dashboard', function () {
+//         return view('dashboard');
+//     })->name('dashboard');
+// });
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified'
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/certificates', [CertificateController::class, "index"]);
 });
 
-Route::get('/certificates', [CertificateController::class, "index"]);//->middleware('auth');
+
 Route::get('/create-certificate',  [CertificateController::class, "create"]);//->middleware('auth');
 Route::post('/create-certificate',  [CertificateController::class, "store"]);//->middleware('auth');
 
