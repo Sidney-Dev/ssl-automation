@@ -116,7 +116,7 @@ class CertificateController extends Controller
         $response = $env->certificateDeletion($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
 
         if ($response == true) {
-            LetsEncryptCertificate::where('id',$id)->delete(); // it hides from showing but the record is still in the DB
+            //LetsEncryptCertificate::where('id',$id)->delete(); // it hides from showing but the record is still in the DB
             // $this->removeFiles($getSlugAndEnvId->domain); // remove directories
             return redirect('/certificates')->with('success', 'Certificate has been deleted');
         }
@@ -131,8 +131,7 @@ class CertificateController extends Controller
             $response = $env->certificateActivation($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
 
             if ($response == true) {
-                LetsEncryptCertificate::where('id', $id)->update(['status' => 'activated']);
-
+        
                 if ($env->clearDomainCache($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug)) {
                     return redirect('/certificates')->with('success', "Certificate has been activated the cache has been cleared");
                 }
@@ -151,7 +150,6 @@ class CertificateController extends Controller
             $response = $env->certificateDeactivation($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
 
             if ($response == true) {
-                LetsEncryptCertificate::where('id', $id)->update(['status' => 'deactivated']);
                 return redirect('/certificates')->with('success', "Certificate has been deactivated");
             }
         }
@@ -168,12 +166,6 @@ class CertificateController extends Controller
         $response = $env->addCertificateToEnvironment($request->cert_name, $request->environment, $request->domain);
 
         if ($response == true) {
-
-            LetsEncryptCertificate::where('domain', $request->domain)->update([
-                'status' => 'installed',
-                'label' => $request->cert_name
-            ]);
-
             return redirect('/certificates')->with('success', "Certificate has been installed");
         }
     }
@@ -224,12 +216,12 @@ class CertificateController extends Controller
                 $this->removeFiles($certificate->domain);
                 $newCertificate = $letsencrypt->generate($certificate->domain, $request->domains); // returns false if successful
                 $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
-                
-                $env->certificateActivation($certificate->environmentID, $certificate->slug);
+                $updatedCertificate = LetsEncryptCertificate::where('domain',$certificate->domain)->first(); //go grab the updated slug by quering letsencryptcertificate model
+                $env->certificateActivation($updatedCertificate->environmentID, $updatedCertificate->slug);
                 
                 if ($newCertificate->error == false) {
-                    if (is_array($domains)) {
-                        foreach ($domains as $domain) {
+                    if (is_array($aDomains)) {
+                        foreach ($aDomains as $domain) {
                             Domains::updateOrCreate([
                                 'name' => trim($domain),
                                 'lets_encrypt_certificate_id' => $certificate->id,
@@ -255,8 +247,8 @@ class CertificateController extends Controller
                 $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
                 
                 if ($newCertificate->error == false) {
-                    if (is_array($domains)) {
-                        foreach ($domains as $domain) {
+                    if (is_array($aDomains)) {
+                        foreach ($aDomains as $domain) {
                             Domains::updateOrCreate([
                                 'name' => trim($domain),
                                 'lets_encrypt_certificate_id' => $certificate->id,
@@ -271,9 +263,15 @@ class CertificateController extends Controller
             case 'pending':
 
                 $newCertificate = $letsencrypt->generate($certificate->domain, $request->domains); // returns false if successful
+                $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
+            
+                $updatedCertificate = LetsEncryptCertificate::where('domain',$certificate->domain)->first();
+                $env->certificateActivation($updatedCertificate->environmentID, $updatedCertificate->slug);
+                
+                
                 if ($newCertificate->error == false) {
-                    if (is_array($domains)) {
-                        foreach ($domains as $domain) {
+                    if (is_array($aDomains)) {
+                        foreach ($aDomains as $domain) {
                             Domains::updateOrCreate([
                                 'name' => trim($domain),
                                 'lets_encrypt_certificate_id' => $certificate->id,
@@ -321,48 +319,107 @@ class CertificateController extends Controller
             }
         }
         $newDomains = rtrim($domains, "\r\n");
-
+    
         // Check parent domain status
         $env = new Environments();
+        $letsencrypt = new LetsEncrypt();
 
-        if ($certificate->status == "installed") {
-            $env->certificateDeletion($certificate->environmentID, $certificate->slug); // delete cert from acquia environment
-            LetsEncryptCertificate::where('id', $certificate->id)->update(['status' => 'pending', 'slug' => null, 'environmentID' => null]);
+        switch($certificate->status) {
+            case 'activated' : 
+                $env->certificateDeactivation($certificate->environmentID, $certificate->slug);
+     
+                $env->certificateDeletion($certificate->environmentID, $certificate->slug);
+        
+                $this->removeFiles($certificate->domain);
 
-            $this->removeFiles($certificate->domain);
-        }
-
-        if ($certificate->status == "activated" || $certificate->status == "success") {
-
-            $env->certificateDeactivation($certificate->environmentID, $certificate->slug);
-            LetsEncryptCertificate::where('id', $certificate->id)->update(['status' => 'deactivated']);
-
-            $env->certificateDeletion($certificate->environmentID, $certificate->slug);
-            LetsEncryptCertificate::where('id', $certificate->id)->update(['status' => 'pending', 'slug' => null, 'environmentID' => null]);
-            $this->removeFiles($certificate->domain);
-        }
-
-        $generateCertificate = new LetsEncrypt;
-        $domains = $generateCertificate->generate($certificate->domain, $newDomains);
-
-        if ($generateCertificate->error == false) {
-            if (is_array($domains)) {
-                foreach ($domains as $domain) {
-                    Domains::updateOrCreate([
-                        'name' => trim($domain),
-                        'lets_encrypt_certificate_id' => $certificate->id,
-                    ]);
+                $newCertificate = $letsencrypt->generate($certificate->domain, $newDomains); // returns false if successful
+            
+                $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
+                $updatedCertificate = LetsEncryptCertificate::where('domain',$certificate->domain)->first(); //go grab the updated slug by quering letsencryptcertificate model
+                $env->certificateActivation($updatedCertificate->environmentID, $updatedCertificate->slug);
+                
+                if (isset($newCertificate->error) && $newCertificate->error == false) {
+                    if (is_array($newDomains)) {
+                        foreach ($newDomains as $domain) {
+                            Domains::where([
+                                'name' => trim($domain),
+                                'lets_encrypt_certificate_id' => $certificate->id,
+                            ])->delete();
+                        }
+                    }
+                    // $letsencrypt->updated(['updated_at' => date('Y-m-d H:i:s'), 'certificate_validation_date' => $generateCertificate->certificateValidationDate]);  
                 }
-            }
-            $certificate->updated(['updated_at' => date('Y-m-d H:i:s'), 'certificate_validation_date' => $generateCertificate->certificateValidationDate]);
+                if (empty($newDomains) && $newCertificate == "success") {
+                    Domains::where([
+                        'lets_encrypt_certificate_id' => $certificate->id,
+                    ])->delete();
+                }
+                break;
 
-            Domains::where('name', $request->subdomain)->delete();
-            return redirect()->route("certificate-details", $certificate->id)->with('success', $request->subdomain . ' domain deleted from certificate');
-        } elseif ($generateCertificate->errorMessage != null) {
-            return redirect()->route("certificate-details", $certificate->id)->with('error', $generateCertificate->errorMessage);
-        } else {
-            return redirect()->route("certificate-details", $certificate->id)->with('error', $request->subdomain . ' domain could not be deleted from certificate');
+            case 'deactivated':
+            case 'installed':
+                $env->certificateDeletion($certificate->environmentID, $certificate->slug); // delete cert from acquia environment
+    
+                $this->removeFiles($certificate->domain);
+                $newCertificate = $letsencrypt->generate($certificate->domain, $newDomains); // returns false if successful
+                    
+                $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
+                
+                if (isset($newCertificate->error) && $newCertificate->error == false) {
+                    if (is_array($newDomains)) {
+                        foreach ($newDomains as $domain) {
+                            Domains::where([
+                                'name' => trim($domain),
+                                'lets_encrypt_certificate_id' => $certificate->id,
+                            ])->delete();
+                        }
+                    }
+                    // $letsencrypt->updated(['updated_at' => date('Y-m-d H:i:s'), 'certificate_validation_date' => $generateCertificate->certificateValidationDate]);  
+                }
+
+                if (empty($newDomains) && $newCertificate == "success") {
+                    Domains::where([
+                        'lets_encrypt_certificate_id' => $certificate->id,
+                    ])->delete();
+                }
+                break;
+
+            case 'pending' :
+                $newCertificate = $letsencrypt->generate($certificate->domain, $newDomains); // returns false if successful
+            
+                $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
+            
+                $updatedCertificate = LetsEncryptCertificate::where('domain',$certificate->domain)->first();
+                $env->certificateActivation($updatedCertificate->environmentID, $updatedCertificate->slug);
+                
+                
+                if (isset($newCertificate->error) && $newCertificate->error == false) {
+                    if (is_array($newDomains)) {
+                        foreach ($newDomains as $domain) {
+                            Domains::where([
+                                'name' => trim($domain),
+                                'lets_encrypt_certificate_id' => $certificate->id,
+                            ])->delete();
+                        }
+                    }
+                    // $letsencrypt->updated(['updated_at' => date('Y-m-d H:i:s'), 'certificate_validation_date' => $generateCertificate->certificateValidationDate]);  
+                }
+
+                if (empty($newDomains) && $newCertificate == "success") {
+                    Domains::where([
+                        'lets_encrypt_certificate_id' => $certificate->id,
+                    ])->delete();
+                }
+
+                break;
+
+            default:
+                // TODO: throw an error message;
+                echo "Something went wrong";
+
         }
+
+        return redirect()->back();
     }
 
     public function removeFiles($domain)

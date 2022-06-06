@@ -66,7 +66,7 @@ class Environments
       
         if (strpos($response,"error") === false) {
             $certificateID = $this->getCertificateID($certName, $envID);
-            LetsEncryptCertificate::where('domain', $domain)->update(['slug' => $certificateID, 'environmentID' => $envID]); // update LetsEncryptCertificate table
+            LetsEncryptCertificate::where('domain', $domain)->update(['slug' => $certificateID, 'environmentID' => $envID, 'status' => 'installed', 'label' => $certName]); // update LetsEncryptCertificate table
             return true;
         } else {
             throw new CertificateNotInstalledException();
@@ -91,6 +91,7 @@ class Environments
             $httpcode = $response->getStatusCode();
 
             if ($httpcode == "202") {
+                LetsEncryptCertificate::where('slug', $certificateID)->update(['status' => 'activated']); // update LetsEncryptCertificate table
                 return true;
             }
 
@@ -154,6 +155,7 @@ class Environments
 
             $httpcode = $response->getStatusCode();
             if ($httpcode == "202") {
+                LetsEncryptCertificate::where('slug', $certificateID)->update(['status' => 'deactivated']);
                 return true;
             }
 
@@ -176,6 +178,7 @@ class Environments
 
             $httpcode = $response->getStatusCode();
             if ($httpcode == "202") {
+                LetsEncryptCertificate::where('slug', $certificateID)->update(['status' => 'pending']);
                 return true;
             }
 
