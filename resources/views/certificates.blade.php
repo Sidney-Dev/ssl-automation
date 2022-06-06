@@ -165,7 +165,7 @@
                                         <div class="py-8 sm:px-10">
                                             <table width="100%">
                                                 <tr>
-                                                    <td>certificate name</td>
+                                                    <td>Label</td>
                                                     <td>
                                                         <input type="text" name="cert_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                                         <input type="hidden" id="domain" name="domain" value="">

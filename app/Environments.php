@@ -66,7 +66,7 @@ class Environments
       
         if (strpos($response,"error") === false) {
             $certificateID = $this->getCertificateID($certName, $envID);
-            LetsEncryptCertificate::where('domain',$domain)->update(['slug' => $certificateID, 'environmentID' => $envID]); // update LetsEncryptCertificate table
+            LetsEncryptCertificate::where('domain', $domain)->update(['slug' => $certificateID, 'environmentID' => $envID]); // update LetsEncryptCertificate table
             return true;
         } else {
             throw new CertificateNotInstalledException();
@@ -85,6 +85,8 @@ class Environments
             $response = $client->request('POST', 'https://cloud.acquia.com/api/environments/' . $envID . '/ssl/certificates/' . $certificateID . '/actions/activate', [
                 'headers' => $headers
             ]);
+
+            // dd($response);
 
             $httpcode = $response->getStatusCode();
 
@@ -205,6 +207,7 @@ class Environments
         }
     }
 
+    // TODO: rather send the 
     public function getCertificateID($certName,$envID)
     {
         try {

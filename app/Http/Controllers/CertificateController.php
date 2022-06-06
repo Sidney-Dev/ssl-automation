@@ -103,29 +103,6 @@ class CertificateController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
@@ -157,7 +134,6 @@ class CertificateController extends Controller
                 LetsEncryptCertificate::where('id', $id)->update(['status' => 'activated']);
 
                 if ($env->clearDomainCache($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug)) {
-                    LetsEncryptCertificate::where('id', $id)->update(['status' => 'success']);
                     return redirect('/certificates')->with('success', "Certificate has been activated the cache has been cleared");
                 }
             }
@@ -192,63 +168,147 @@ class CertificateController extends Controller
         $response = $env->addCertificateToEnvironment($request->cert_name, $request->environment, $request->domain);
 
         if ($response == true) {
-            LetsEncryptCertificate::where('domain', $request->domain)->update(['status' => 'installed']);
+
+            LetsEncryptCertificate::where('domain', $request->domain)->update([
+                'status' => 'installed',
+                'label' => $request->cert_name
+            ]);
+
             return redirect('/certificates')->with('success', "Certificate has been installed");
         }
     }
 
+    /**
+     * This method is used to store additional domains to an existing certificate.
+     * The current status of the certificate will determine the actions
+     * 
+     * NOTE: At this stage of the application, the user is responsible to ensure that the domains he is entering are his, and valid
+     *       In another version of the application, we can perhaps link to a domain checker to ensure that the domain exists and belongs to a certain entity
+     * 
+     * - active:
+     *      deactivate the certificate
+     *      remove the certificate from acquia
+     *      remove certificate from the file system
+     *      generate the certificate including the additional domains
+     *      add the certificate to the environment which it was
+     *      put the certificate back in the active state
+     * - inactive|deactivated:
+     *      remove certificate from the file system
+     *      generate the certificate including the additional domains
+     *      add the certificate to the environment which it was
+     * - pending:
+     *      remove certificate from the file system
+     *      generate the certificate including the additional domains         
+     */
     public function storeDomains(Request $request, LetsEncryptCertificate $certificate)
     {
         // Validate domain by checking invalid characters
         $this->validateDomain($request->domains);
+
         $aDomains = explode("\r\n", $request->domains);
+
+        $letsencrypt = new LetsEncrypt;
+        $env = new Environments();
 
         // Check if domain already exists
         foreach ($aDomains as $domain) {
             $this->checkDomainDoesNotExist($domain);
         }
 
-        // Check parent domain status
-        $env = new Environments();
+        switch($certificate->status) {
 
-        if ($certificate->status == "installed") {
-            $env->certificateDeletion($certificate->environmentID, $certificate->slug); // delete cert from acquia environment
-            LetsEncryptCertificate::where('id', $certificate->id)->update(['status' => 'pending', 'slug' => null, 'environmentID' => null]);
+            case 'activated':
 
-            $this->removeFiles($certificate->domain);
-        }
-
-        if ($certificate->status == "activated" || $certificate->status == "success") {
-
-            $env->certificateDeactivation($certificate->environmentID, $certificate->slug);
-            LetsEncryptCertificate::where('id', $certificate->id)->update(['status' => 'deactivated']);
-
-            $env->certificateDeletion($certificate->environmentID, $certificate->slug);
-            LetsEncryptCertificate::where('id', $certificate->id)->update(['status' => 'pending', 'slug' => null, 'environmentID' => null]);
-
-            $this->removeFiles($certificate->domain);
-        }
-
-        $generateCertificate = new LetsEncrypt;
-        $domains = $generateCertificate->generate($certificate->domain, $request->domains);
-
-
-        if ($generateCertificate->error == false) {
-            if (is_array($domains)) {
-                foreach ($domains as $domain) {
-                    Domains::updateOrCreate([
-                        'name' => trim($domain),
-                        'lets_encrypt_certificate_id' => $certificate->id,
-                    ]);
+                $env->certificateDeactivation($certificate->environmentID, $certificate->slug);
+                $env->certificateDeletion($certificate->environmentID, $certificate->slug);
+                $this->removeFiles($certificate->domain);
+                $newCertificate = $letsencrypt->generate($certificate->domain, $request->domains); // returns false if successful
+                $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
+                
+                $env->certificateActivation($certificate->environmentID, $certificate->slug);
+                
+                if ($newCertificate->error == false) {
+                    if (is_array($domains)) {
+                        foreach ($domains as $domain) {
+                            Domains::updateOrCreate([
+                                'name' => trim($domain),
+                                'lets_encrypt_certificate_id' => $certificate->id,
+                            ]);
+                        }
+                    }
+                    // $letsencrypt->updated(['updated_at' => date('Y-m-d H:i:s'), 'certificate_validation_date' => $generateCertificate->certificateValidationDate]);
+                    
                 }
-            }
-            $certificate->updated(['updated_at' => date('Y-m-d H:i:s'), 'certificate_validation_date' => $generateCertificate->certificateValidationDate]);
-            return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains added to certificate');
-        } elseif ($generateCertificate->errorMessage != null) {
-            return redirect()->route("certificate-details", $certificate->id)->with('error', $generateCertificate->errorMessage);
-        } else {
-            return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be added to certificate');
+
+                // dd($certificate);
+                
+
+                break;
+        
+            case 'deactivated':
+            case 'installed':
+
+                $env->certificateDeletion($certificate->environmentID, $certificate->slug);
+                $this->removeFiles($certificate->domain);
+                $newCertificate = $letsencrypt->generate($certificate->domain, $request->domains); // returns false if successful
+                
+                $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
+                
+                if ($newCertificate->error == false) {
+                    if (is_array($domains)) {
+                        foreach ($domains as $domain) {
+                            Domains::updateOrCreate([
+                                'name' => trim($domain),
+                                'lets_encrypt_certificate_id' => $certificate->id,
+                            ]);
+                        }
+                    }
+                }
+                
+
+                break;
+
+            case 'pending':
+
+                $newCertificate = $letsencrypt->generate($certificate->domain, $request->domains); // returns false if successful
+                if ($newCertificate->error == false) {
+                    if (is_array($domains)) {
+                        foreach ($domains as $domain) {
+                            Domains::updateOrCreate([
+                                'name' => trim($domain),
+                                'lets_encrypt_certificate_id' => $certificate->id,
+                            ]);
+                        }
+                    }
+
+                }
+
+                break;
+
+            default:
+                // TODO: throw an error message;
+                echo "Something went wrong";
+
         }
+
+        return redirect()->back();
+
+        // if ($generateCertificate->error == false) {
+        //     if (is_array($domains)) {
+        //         foreach ($domains as $domain) {
+        //             Domains::updateOrCreate([
+        //                 'name' => trim($domain),
+        //                 'lets_encrypt_certificate_id' => $certificate->id,
+        //             ]);
+        //         }
+        //     }
+        //     $certificate->updated(['updated_at' => date('Y-m-d H:i:s'), 'certificate_validation_date' => $generateCertificate->certificateValidationDate]);
+        //     return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains added to certificate');
+        // } elseif ($generateCertificate->errorMessage != null) {
+        //     return redirect()->route("certificate-details", $certificate->id)->with('error', $generateCertificate->errorMessage);
+        // } else {
+        //     return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be added to certificate');
+        // }
     }
 
     public function deleteDomains(Request $request, LetsEncryptCertificate $certificate)

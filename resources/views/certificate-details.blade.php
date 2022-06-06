@@ -54,14 +54,14 @@
                                             {{ $certificate->id }}
                                         </td>
                                     </tr>
-                                    <!-- <tr class="bg-white border-b hover:bg-gray-50">
+                                    <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4">
-                                            name
+                                            label
                                         </td>
                                         <td class="px-6 py-4">
-                                            (name)
+                                            {{ $certificate->label }}
                                         </td>
-                                    </tr> -->
+                                    </tr>
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4">
                                             domain
@@ -70,6 +70,16 @@
                                             {{ $certificate->domain }}
                                         </td>
                                     </tr>
+                                    
+                                    <tr class="bg-white border-b hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            status in acquia
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $certificate->status  }}
+                                        </td>
+                                    </tr>
+
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-6 py-4">
                                             status

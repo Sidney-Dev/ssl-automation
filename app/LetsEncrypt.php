@@ -4,6 +4,14 @@ namespace App;
 
 use Illuminate\Support\Str;
 
+/**
+ * TODO: check the certificate states
+ * A certificate should only have three states:
+ * 1 - pending: it means that the certificate is not yet in an acquia environment
+ * 2 - inactive: it means that the certificate is installed in an environment but not inactive
+ * 3 - active: the certificate is actively installed
+ */
+
 class LetsEncrypt
 {
     public $certificateValidationDate = null;
@@ -23,6 +31,8 @@ class LetsEncrypt
             
             // additional domains used during authorization
             $addonDomainsAuthorize = implode(" ", $additionalDomainsArray); // (domaina.com domainb.com)
+
+            // dd($addonDomainsAuthorize);
             
             $convertedDomainsArray = [];
 
@@ -32,8 +42,9 @@ class LetsEncrypt
             
             // additional domains used during the request
             $additionalDomains = implode(" ", $convertedDomainsArray); // (-a domaina.com -a domainb.com)
+            // dd($additionalDomains);
         }
-    
+
         $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
 
         $this->certificateChallenge($authResponse);
@@ -106,6 +117,8 @@ class LetsEncrypt
             $this->error = true;
             $this->errorMessage = "The authorization check failed";
         }
+        // dd($check);
+
     }
 
     public function certificateRequest($mainDomain, $additionalDomains)
@@ -114,6 +127,7 @@ class LetsEncrypt
         
         $successMessage = "The SSL certificate was fetched successfully!";
 
+        // dd($request);
         if (Str::contains($request, $successMessage)) {
             $this->setCertificateValidationDate($request);
             $this->message = "success";
