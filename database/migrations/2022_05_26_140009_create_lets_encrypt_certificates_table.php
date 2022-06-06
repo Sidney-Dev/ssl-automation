@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             $table->string('domain')->unique();
+            $table->string('label')->unique()->nullable();
             $table->timestamp('last_renewed_at')->nullable();
             $table->timestamp('certificate_validation_date')->nullable();
             $table->boolean('created')->default(false);
@@ -25,7 +26,7 @@ return new class extends Migration
             $table->string('chain_path')->nullable();
             $table->string('cert_path')->nullable();
             $table->string('privkey_path')->nullable();
-            $table->enum('status',['error','pending','installed','activated','success']);
+            $table->enum('status',['error', 'pending', 'installed', 'activated', 'success', 'deactivated']);
             $table->bigInteger('slug')->nullable();
             $table->string('environmentID')->nullable();
         });
@@ -41,3 +42,4 @@ return new class extends Migration
         Schema::dropIfExists('lets_encrypt_certificates');
     }
 };
+
