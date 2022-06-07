@@ -75,6 +75,7 @@ class CertificateController extends Controller
                 'certificate_validation_date' => $certificate->certificateValidationDate,
                 'fullchain_path' =>  env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain . '/public/fullchain.pem',
                 'chain_path' => env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain . '/public/chain.pem',
+                'cert_path' => env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain . '/public/cert.pem',
                 'privkey_path' => env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain . '/private/key.private.pem',
                 'last_renewed_at' => now(),
                 'created'=> true,

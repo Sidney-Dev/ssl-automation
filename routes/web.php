@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EnvironmentController;
+use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,13 +33,7 @@ Route::middleware([
     Route::post('/register', [RegisteredUserController::class, 'store']);
 });
 
-// Route::middleware([
-//     'auth:sanctum',
-//     config('jetstream.auth_session'),
-//     'verified'
-// ])->group(function () {
-//     Route::get('/certificates', [CertificateController::class, "index"]);
-// });
+
 
 Route::get('/certificates', [CertificateController::class, "index"])->middleware('auth')->name('certificate');
 Route::get('/create-certificate',  [CertificateController::class, "create"]);//->middleware('auth');
@@ -58,9 +53,20 @@ Route::get('/domain-details', function () {
 
 
 
-Route::get('/users', [UserController::class, "index"])->middleware('auth')->name('user');
+
 
 
 
 Route::get('/environments', [EnvironmentController::class, "index"])->middleware('auth')->name('environment');
 Route::get('/environments/certificate', [EnvironmentController::class, "getCertificateID"])->middleware('auth');
+
+
+Route::middleware('auth')->group(function () {
+    Route::get('/users', [UserController::class, "index"])->name('user');
+    Route::get('/register-user', [UserController::class, "create"])->name('registration');
+    Route::post('/register-user', [UserController::class, "store"])->name('registration');
+    Route::get('/view-user/{id}', [UserController::class, "show"])->name('view-user');
+    Route::get('/update-user/{id}', [UserController::class, "edit"])->name('edit-user');
+    Route::post('/update-user/{id}', [UserController::class, "update"])->name('edit-user');
+    Route::post('/delete-user', [UserController::class, "destroy"])->name('delete-user');
+});
