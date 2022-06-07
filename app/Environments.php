@@ -86,8 +86,6 @@ class Environments
                 'headers' => $headers
             ]);
 
-            // dd($response);
-
             $httpcode = $response->getStatusCode();
 
             if ($httpcode == "202") {

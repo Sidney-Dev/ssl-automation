@@ -20,25 +20,27 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Route::middleware([
-//     'auth:sanctum',
-//     config('jetstream.auth_session'),
-//     'verified'
-// ])->group(function () {
-//     Route::get('/dashboard', function () {
-//         return view('dashboard');
-//     })->name('dashboard');
-// });
-
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified'
 ])->group(function () {
-    Route::get('/certificates', [CertificateController::class, "index"]);
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+    Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+    Route::post('/register', [RegisteredUserController::class, 'store']);
 });
 
+// Route::middleware([
+//     'auth:sanctum',
+//     config('jetstream.auth_session'),
+//     'verified'
+// ])->group(function () {
+//     Route::get('/certificates', [CertificateController::class, "index"]);
+// });
 
+Route::get('/certificates', [CertificateController::class, "index"])->middleware('auth')->name('certificate');
 Route::get('/create-certificate',  [CertificateController::class, "create"]);//->middleware('auth');
 Route::post('/create-certificate',  [CertificateController::class, "store"]);//->middleware('auth');
 
@@ -56,9 +58,9 @@ Route::get('/domain-details', function () {
 
 
 
-Route::get('/users', [UserController::class, "index"])->middleware('auth');
+Route::get('/users', [UserController::class, "index"])->middleware('auth')->name('user');
 
 
 
-Route::get('/environments', [EnvironmentController::class, "index"])->middleware('auth');
+Route::get('/environments', [EnvironmentController::class, "index"])->middleware('auth')->name('environment');
 Route::get('/environments/certificate', [EnvironmentController::class, "getCertificateID"])->middleware('auth');
