@@ -106,7 +106,7 @@ class CertificateController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Deleted the certificate from acquia
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -119,14 +119,14 @@ class CertificateController extends Controller
         $response = $env->certificateDeletion($getSlugAndEnvId->environmentID, $getSlugAndEnvId->slug);
 
         if ($response == true) {
-            //LetsEncryptCertificate::where('id',$id)->delete(); // it hides from showing but the record is still in the DB
-            // $this->removeFiles($getSlugAndEnvId->domain); // remove directories
             return redirect('/certificates')->with('success', 'Certificate has been removed');
+        } else {
+            return redirect()->back();
         }
     }
 
     /**
-     * Delete the specified resource from storage.
+     * Delete the certificate from the file system
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -134,7 +134,13 @@ class CertificateController extends Controller
 
     public function delete(Request $request)
     {
-        if (LetsEncryptCertificate::where('id', $request->certificate)->delete()) {
+        $certificate = LetsEncryptCertificate::where('id', $request->certificate)->first();
+        $domain = $certificate->domain;
+
+        if ($certificate->delete()) {
+            
+            (new LetsEncrypt)->removeDir($domain);
+            
             return redirect('/certificates')->with('success', 'Certificate has been deleted');
         } else {
             return redirect('/certificates')->with('error', 'Certificate has not been deleted');
@@ -219,19 +225,23 @@ class CertificateController extends Controller
 
         $aDomains = explode("\r\n", $request->domains);
 
+        /**
+         * Check if the incoming domains request are the same as the domains in the database]
+         * only continue the process if there is a difference between both arrays
+         * 
+         * $aDomains = explode("\r\n", $request->domains);
+         * $currentDomains = $certificate->domains;
+         * 
+         * TIP: difference between $aDomains vs $currentDomains
+         */
+        
+
         $env = new Environments();
 
         // Check if domain already exists
         foreach ($aDomains as $domain) {
             $letsencrypt->checkDomainDoesNotExist($domain);
         }
-
-        // Check if any new domain was added
-        // foreach($certificate->domains as $domain) {
-        //     if (in_array($domain->name,$aDomains)) {
-        //         return redirect()->route("certificate-details", $certificate->id)->with('error', 'Please insert a new domain');
-        //     } 
-        // }
 
         switch ($certificate->status) {
 
@@ -313,11 +323,6 @@ class CertificateController extends Controller
                         }
                     }
 
-                    $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
-
-                    $updatedCertificate = LetsEncryptCertificate::where('domain', $certificate->domain)->first();
-                    $env->certificateActivation($updatedCertificate->environmentID, $updatedCertificate->slug);
-
                     $letsencrypt->removeDir($certificate->domain . "-old");
                     return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains added to certificate');
                 } else {
@@ -329,8 +334,7 @@ class CertificateController extends Controller
                 break;
 
             default:
-                // TODO: throw an error message;
-                echo "Something went wrong";
+                return redirect()->intended();
         }
 
         return redirect()->back();
@@ -340,12 +344,12 @@ class CertificateController extends Controller
     {
         $domains = null;
 
-        foreach ($certificate->domains as $domain) {
-            if ($domain->name != $request->subdomain) {
-                $domains .= $domain->name . "\r\n";
-            }
-        }
-        $newDomains = rtrim($domains, "\r\n");
+        // foreach ($certificate->domains as $domain) {
+        //     if ($domain->name != $request->subdomain) {
+        //         $domains .= $domain->name . "\r\n";
+        //     }
+        // }
+        // $newDomains = rtrim($domains, "\r\n");
     
         // Check parent domain status
         $env = new Environments();

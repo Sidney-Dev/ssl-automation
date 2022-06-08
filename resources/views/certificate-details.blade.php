@@ -164,8 +164,11 @@
                                             {{ $domain->id }}
                                         </td>
                                         <td class="px-6 py-4">
+                                            @if($certificate->status == 'activated')
+                                                <a href="https://{{ $domain->name }}" target="_blank">{{ $domain->name }}</a>
+                                            @else
                                             {{ $domain->name }}
-
+                                            @endif
                                         </td>
 
                                         <td class="px-6 py-4 text-right">
