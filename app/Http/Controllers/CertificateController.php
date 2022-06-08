@@ -30,7 +30,7 @@ class CertificateController extends Controller
     public function index()
     {
         $allCertificateInfos = LetsEncryptCertificate::with('domains')->get();
-
+        
         return view('certificates', compact("allCertificateInfos"));
     }
 
@@ -55,7 +55,7 @@ class CertificateController extends Controller
         $request->validate([
             'domain' => 'required'
         ]);
-
+      
         // TODO: validate the domain
         $domain = $request->domain;
 
@@ -119,7 +119,23 @@ class CertificateController extends Controller
         if ($response == true) {
             //LetsEncryptCertificate::where('id',$id)->delete(); // it hides from showing but the record is still in the DB
             // $this->removeFiles($getSlugAndEnvId->domain); // remove directories
+            return redirect('/certificates')->with('success', 'Certificate has been removed');
+        }
+    }
+
+    /**
+     * Delete the specified resource from storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+
+    public function delete(Request $request)
+    {
+        if (LetsEncryptCertificate::where('id', $request->certificate)->delete()) {
             return redirect('/certificates')->with('success', 'Certificate has been deleted');
+        } else {
+            return redirect('/certificates')->with('error', 'Certificate has not been deleted');
         }
     }
 
@@ -162,7 +178,6 @@ class CertificateController extends Controller
             'environment' => 'required',
             'cert_name' => 'required',
         ]);
-
         $env = new Environments();
         $response = $env->addCertificateToEnvironment($request->cert_name, $request->environment, $request->domain);
 
@@ -197,7 +212,7 @@ class CertificateController extends Controller
     {
         // Validate domain by checking invalid characters
         $this->validateDomain($request->domains);
-
+       
         $aDomains = explode("\r\n", $request->domains);
 
         $letsencrypt = new LetsEncrypt;
@@ -207,13 +222,13 @@ class CertificateController extends Controller
         foreach ($aDomains as $domain) {
             $this->checkDomainDoesNotExist($domain);
         }
-
+     
         // Check if any new domain was added
-        foreach($certificate->domains as $domain) {
-            if (in_array($domain->name,$aDomains)) {
-                return redirect()->route("certificate-details", $certificate->id)->with('error', 'Please insert a new domain');
-            } 
-        }
+        // foreach($certificate->domains as $domain) {
+        //     if (in_array($domain->name,$aDomains)) {
+        //         return redirect()->route("certificate-details", $certificate->id)->with('error', 'Please insert a new domain');
+        //     } 
+        // }
 
         switch($certificate->status) {
 
@@ -241,7 +256,7 @@ class CertificateController extends Controller
                     
                     return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains added to certificate');
                 } else {
-                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be added to certificate');
+                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be added to certificate, '.$letsencrypt->errorMessage);
                 }
 
                 break;
@@ -267,7 +282,7 @@ class CertificateController extends Controller
                     $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
                     return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains added to certificate');
                 } else {
-                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be added to certificate');
+                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be added to certificate, '.$letsencrypt->errorMessage);
                 }
                 
                 break;
@@ -293,7 +308,7 @@ class CertificateController extends Controller
 
                     return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains added to certificate');
                 } else {
-                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be added to certificate');
+                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be added to certificate, '.$letsencrypt->errorMessage);
                 }
 
                 break;
@@ -354,7 +369,7 @@ class CertificateController extends Controller
 
                     return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains deleted from certificate');
                 } else {
-                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be deleted from certificate '.$letsencrypt->message);
+                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be deleted from certificate, '.$letsencrypt->errorMessage);
                 }
                
                 break;
@@ -386,7 +401,7 @@ class CertificateController extends Controller
 
                     return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains deleted from certificate');
                 } else {
-                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be deleted from certificate '.$letsencrypt->message);
+                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be deleted from certificate, '.$letsencrypt->errorMessage);
                 }
 
                 
@@ -418,7 +433,7 @@ class CertificateController extends Controller
                    
                     return redirect()->route("certificate-details", $certificate->id)->with('success', 'Domains deleted from certificate');
                 } else {
-                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be deleted from certificate '.$letsencrypt->message);
+                    return redirect()->route("certificate-details", $certificate->id)->with('error', 'Domains could not be deleted from certificate, '.$letsencrypt->errorMessage);
                 }
 
                 break;

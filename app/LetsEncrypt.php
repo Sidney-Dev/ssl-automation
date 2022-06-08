@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 
 /**
  * TODO: check the certificate states
@@ -16,7 +17,6 @@ class LetsEncrypt
 {
     public $certificateValidationDate = null;
 
-    protected $message = '';
     public $error = false;
     public $errorMessage = null;
 
@@ -50,9 +50,12 @@ class LetsEncrypt
 
         // Note: only uncomment this when needed because it generates an actual certificate
         $this->certificateRequest($mainDomain, $additionalDomains);
+        
+        // check if all the files have been generated and fetched
+        $this->checkGeneratedCertificateDir($mainDomain); 
 
         if (!empty($additionalDomains)) return $additionalDomainsArray;
-        return $this->message;
+        // return $this->message;
     }
 
     public function certificateAuthorization($mainDomain, $additionalDomains = "")
@@ -65,7 +68,7 @@ class LetsEncrypt
             return $authResponse;
         } else {
             $this->error = true;
-            $this->errorMessage = "Failed to fetch the authorization token";
+            $this->errorMessage .= "Failed to fetch the authorization token.".PHP_EOL;
         }
     }
 
@@ -99,7 +102,7 @@ class LetsEncrypt
 
             if ($http_code != "200") {
                 $this->error = true;
-                $this->errorMessage = "Failed to upload the challenge on the server";
+                $this->errorMessage .= "Failed to upload the challenge on the server.".PHP_EOL;
             }
         }
     }
@@ -109,13 +112,10 @@ class LetsEncrypt
         $check = shell_exec(env('ROOT_DIR') . "check -s http {$mainDomain} {$additionalDomains}");
         $successMessage = 'The authorization check was successful!';
 
-        if (Str::contains($check, $successMessage)) {
-            $this->message = "success";
-            return $this->message;
-        } else {
+        if (!Str::contains($check, $successMessage)) {
             $this->error = true;
-            $this->errorMessage = "The authorization check failed";
-        }
+            $this->errorMessage .= "The authorization check failed.".PHP_EOL;
+        } 
     }
 
     public function certificateRequest($mainDomain, $additionalDomains)
@@ -124,14 +124,12 @@ class LetsEncrypt
         self::writeFile($request);
         $successMessage = "The SSL certificate was fetched successfully!";
 
-        if (Str::contains($request, $successMessage)) {
-            $this->setCertificateValidationDate($request);
-            $this->message = "success";
-            return $this->message;
-        } else {
+        if (!Str::contains($request, $successMessage)) {
             $this->error = true;
-            $this->errorMessage = "Failed to fetch the certificate";
-        }
+            $this->errorMessage .= "Failed to fetch the certificate.".PHP_EOL;
+        } 
+
+        $this->setCertificateValidationDate($request);
     }
 
     /**
@@ -150,14 +148,47 @@ class LetsEncrypt
         $file = 'manley.txt';
         if (!file_exists($file)) {
             $handle = fopen($file,'w');
-            $contents = $response . "PHP_EOL";
+            $contents = $response . PHP_EOL . date('Y-m-d H:i:s');
             fwrite($handle,$contents);
             fclose($handle);
         } else {
             $handle = fopen($file,'a');
-            $contents = $response . "PHP_EOL";
+            $contents = $response .  PHP_EOL . date('Y-m-d H:i:s');
             fwrite($handle,$contents);
             fclose($handle);
         }
     }
+
+    public function checkGeneratedCertificateDir($domain) {
+        $files['private'] = ['combined.pem','key.private.pem','key.public.pem'];
+        $files['public'] = ['cert.pem','chain.pem','fullchain.pem'];
+
+        $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain.'/';
+
+        $is_file_exists = false;
+
+        foreach($files['private'] as $filename) {
+            $fullpath = $path.'private/'.$filename;
+
+            if (!File::exists($fullpath)) {
+                $is_file_exists = true;
+                $this->error = true;
+                $this->errorMessage .= $fullpath.' does not exist.'.PHP_EOL;
+                break;
+            }
+        }
+
+        if ($is_file_exists === false) {
+            foreach($files['public'] as $filename) {
+                $fullpath = $path.'public/'.$filename;
+    
+                if (!File::exists($fullpath)) {
+                    $is_file_exists = true;
+                    $this->error = true;
+                    $this->errorMessage .= $fullpath.' does not exist.'.PHP_EOL;
+                    break;
+                }
+            }
+        }
+    } 
 }

@@ -34,34 +34,31 @@ Route::middleware([
 });
 
 
-
-Route::get('/certificates', [CertificateController::class, "index"])->middleware('auth')->name('certificate');
-Route::get('/create-certificate',  [CertificateController::class, "create"]);//->middleware('auth');
-Route::post('/create-certificate',  [CertificateController::class, "store"]);//->middleware('auth');
-
-Route::get('/certificate-details/{certificate}', [CertificateController::class, "show"])->middleware('auth')->name('certificate-details');
-Route::post('/certificate-details/{certificate}/store-domains', [CertificateController::class, "storeDomains"])->name('store-domains');//->middleware('auth')->name('store-domains');
-Route::post('/certificate-details/{certificate}/delete-domains', [CertificateController::class, "deleteDomains"])->name('delete-domains');//->middleware('auth')->name('store-domains');
-Route::get('/certificate-delete/{id}', [CertificateController::class, "destroy"])->middleware('auth')->name('certificate-delete');
-Route::get('/certificate-activate/{id}', [CertificateController::class, "activate"])->middleware('auth')->name('certificate-activate');
-Route::get('/certificate-deactivate/{id}', [CertificateController::class, "deactivate"])->middleware('auth')->name('certificate-deactivate');
-Route::post('/certificate-install', [CertificateController::class, "addCertificateToEnvironment"])->middleware('auth');
-
 Route::get('/domain-details', function () {
     return view('domain-details');
 })->middleware('auth');
 
 
-
-
-
-
-
-Route::get('/environments', [EnvironmentController::class, "index"])->middleware('auth')->name('environment');
-Route::get('/environments/certificate', [EnvironmentController::class, "getCertificateID"])->middleware('auth');
-
-
 Route::middleware('auth')->group(function () {
+
+    // Environments Controller route
+    Route::get('/environments', [EnvironmentController::class, "index"])->name('environment');
+    Route::get('/environments/certificate', [EnvironmentController::class, "getCertificateID"]);
+
+    // Certificates Controller route
+    Route::get('/certificates', [CertificateController::class, "index"])->name('certificate');
+    Route::get('/create-certificate',  [CertificateController::class, "create"]);
+    Route::post('/create-certificate',  [CertificateController::class, "store"]);
+    Route::get('/certificate-details/{certificate}', [CertificateController::class, "show"])->name('certificate-details');
+    Route::post('/certificate-details/{certificate}/store-domains', [CertificateController::class, "storeDomains"])->name('store-domains');
+    Route::post('/certificate-details/{certificate}/delete-domains', [CertificateController::class, "deleteDomains"])->name('delete-domains');
+    Route::get('/certificate-remove/{id}', [CertificateController::class, "destroy"])->name('certificate-remove');
+    Route::post('/certificate-delete', [CertificateController::class, "delete"])->name('certificate-delete');
+    Route::get('/certificate-activate/{id}', [CertificateController::class, "activate"])->name('certificate-activate');
+    Route::get('/certificate-deactivate/{id}', [CertificateController::class, "deactivate"])->name('certificate-deactivate');
+    Route::post('/certificate-install', [CertificateController::class, "addCertificateToEnvironment"]);
+
+    // Users Controller route
     Route::get('/users', [UserController::class, "index"])->name('user');
     Route::get('/register-user', [UserController::class, "create"])->name('registration');
     Route::post('/register-user', [UserController::class, "store"])->name('registration');

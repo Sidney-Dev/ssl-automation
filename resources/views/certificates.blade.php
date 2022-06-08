@@ -61,7 +61,11 @@
                                                     {{ $certInfo->id }}
                                                 </th>
                                                 <td class="px-6 py-4">
+                                                    @if($certInfo->status == 'activated')
+                                                    <a href="https://{{ $certInfo->domain }}" target="_blank">{{ $certInfo->domain }}</a>
+                                                    @else
                                                     {{ $certInfo->domain }}
+                                                    @endif
                                                 </td>
                                                 @if($certInfo->status == 'success')
                                                 <td class="flex px-6 py-4">
@@ -108,6 +112,9 @@
                                                     @if($certInfo->status == 'pending')
                                                     <a href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline" onclick="openEnvironmentPopup( '{{ $certInfo->domain }}' )">Install</a>
                                                     @endif
+                                                    @if($certInfo->status == 'pending' || $certInfo->status == 'error')
+                                                    <a href="#" class="font-medium text-red-600 dark:text-blue-500 hover:underline" onclick="openDeletePopup( '{{ $certInfo->id }}' )">Delete</a>
+                                                    @endif
                                                     @if($certInfo->status == 'success' || $certInfo->status == 'deactivated' || $certInfo->status == 'activated' || $certInfo->status == 'installed')
                                                     <a href="{{ ($certInfo->status=='pending' || $certInfo->status=='deactivated' || $certInfo->status=='installed') ? 
                                                         route('certificate-activate', $certInfo->id) : 
@@ -115,8 +122,8 @@
                                                         {{ ($certInfo->status=='pending' || $certInfo->status=='deactivated' || $certInfo->status=='installed') ? 'Activate' : 'Deactivate'}}
                                                     </a>
                                                     @endif
-                                                    @if($certInfo->status != 'success' && $certInfo->status != 'activated')
-                                                    <a href="{{ route('certificate-delete', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Remove</a>
+                                                    @if($certInfo->status != 'success' && $certInfo->status != 'activated' && $certInfo->status != 'pending' && $certInfo->status != 'error')
+                                                    <a href="{{ route('certificate-remove', $certInfo->id) }}" class="font-medium text-blue-600 dark:text-blue-500 hover:underline">Remove From Acquia</a>
                                                     @endif
                                                 </td>
                                             </tr>
@@ -128,11 +135,41 @@
                             </div>
                         </div>
 
+                        <!-- Delete certificate popup -->
+                        <div class="relative z-10" id="delete-modal" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display:none;">
+
+                            <div class="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity"></div>
+
+                            <div class="fixed z-10 inset-0 overflow-y-auto">
+                                <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
+                                    <form action="{{ route('certificate-delete') }}" method="post">
+                                        @csrf
+                                        <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+                                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                                <div class="sm:flex sm:items-start">
+                                                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                                        <h3 class="text-lg leading-6 font-medium text-red-600" id="modal-title">Delete certificate</h3>
+                                                        <div class="mt-2">
+                                                            <p class="text-sm text-gray-500">Are you sure you want to permanently delete this certificate?</p>
+                                                            <input type="hidden" id="certificate" name="certificate" value="" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse justify-end">
+                                                <button type="button" class="mt-3 w-50 inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeDeletePopup()">Cancel</button>
+                                                <button type="submit" onclick="this.classList.toggle('button--loading')" class="w-50 inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"><span class="loader">Delete</span></button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Add to environment popup -->
                         <div class="relative z-10" id="add-to-environment-modal" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display:none;">
 
                             <div class="fixed inset-0 bg-gray-500 bg-opacity-50 transition-opacity"></div>
-
                             <div class="fixed z-10 inset-0 overflow-y-auto">
                                 <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
 
@@ -151,6 +188,9 @@
                                                             <td>Label</td>
                                                             <td>
                                                                 <input type="text" name="cert_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                                                @if ($errors->has('cert_name'))
+                                                                <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ $errors->first('cert_name') }}</p>
+                                                                @endif
                                                                 <input type="hidden" id="domain" name="domain" value="">
                                                             </td>
                                                         </tr>
@@ -158,11 +198,14 @@
                                                             <td>environment</td>
                                                             <td class="pt-4">
                                                                 <select name="environment" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                                                    <option>Please select environment</option>
+                                                                    <option value="">Please select environment</option>
                                                                     <option value="6294-df6a4756-6dcc-4190-90b9-d7b3e870a6c2">Dev</option>
                                                                     <option value="6290-df6a4756-6dcc-4190-90b9-d7b3e870a6c2">Live</option>
                                                                     <option value="6292-df6a4756-6dcc-4190-90b9-d7b3e870a6c2">Test</option>
                                                                 </select>
+                                                                @if ($errors->has('environment'))
+                                                                <p class="block mt-2 text-sm text-red-600 dark:text-red-500">{{ $errors->first('environment') }}</p>
+                                                                @endif
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -181,16 +224,27 @@
                 </div>
             </div>
             <script>
-            // Add to environment
-            function openEnvironmentPopup($domain) {
-                var $hiddenName = document.getElementById("domain");
-                $hiddenName.value =$domain;
-                document.getElementById("add-to-environment-modal").style.display = "block";
-            }
+                // Add to environment
+                function openEnvironmentPopup($domain) {
+                    var $hiddenName = document.getElementById("domain");
+                    $hiddenName.value = $domain;
+                    document.getElementById("add-to-environment-modal").style.display = "block";
+                }
 
-            function closeEnvironmentPopup() {
-                document.getElementById("add-to-environment-modal").style.display = "none";
-            }
+                function closeEnvironmentPopup() {
+                    document.getElementById("add-to-environment-modal").style.display = "none";
+                }
+
+                // Delete
+                function openDeletePopup($certificate) {
+                    var $hiddenCertificate = document.getElementById("certificate");
+                    $hiddenCertificate.value = $certificate;
+                    document.getElementById("delete-modal").style.display = "block";
+                }
+
+                function closeDeletePopup() {
+                    document.getElementById("delete-modal").style.display = "none";
+                }
             </script>
         </div>
     </div>
