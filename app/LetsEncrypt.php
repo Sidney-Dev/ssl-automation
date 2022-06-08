@@ -4,6 +4,9 @@ namespace App;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use App\Models\LetsEncryptCertificate;
+use App\Exceptions\DomainAlreadyExists;
+use App\Exceptions\InvalidDomainException;
 
 /**
  * TODO: check the certificate states
@@ -55,7 +58,7 @@ class LetsEncrypt
         $this->checkGeneratedCertificateDir($mainDomain); 
 
         if (!empty($additionalDomains)) return $additionalDomainsArray;
-        // return $this->message;
+        return true;
     }
 
     public function certificateAuthorization($mainDomain, $additionalDomains = "")
@@ -129,6 +132,11 @@ class LetsEncrypt
             $this->errorMessage .= "Failed to fetch the certificate.".PHP_EOL;
         } 
 
+        // if (Str::contains($request,"There is currently no certificate for domain")) {
+        //     $this->error = true;
+        //     $this->errorMessage .= "There is currently no certificate for domain {$mainDomain} in the Acme PHP storage.".PHP_EOL;
+        // }
+
         $this->setCertificateValidationDate($request);
     }
 
@@ -190,5 +198,59 @@ class LetsEncrypt
                 }
             }
         }
-    } 
+    }
+
+     /**
+     * Rename ssl certificate directory
+     * @param string $domain
+     * @param string $suffix
+     * @return void
+     */
+
+    public function renameDir($domain,$suffix): void
+    {
+        $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain;
+
+        if (File::exists($path)) {
+            rename($path,$path.$suffix);
+        } else {
+            $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain.$suffix;
+            if (File::exists($path)) {
+                rename($path,str_replace($suffix,"",$path));
+            }
+        }
+    }
+    
+    public function removeDir($domain)
+    {
+        $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain;
+
+        if (File::exists($path)) {
+            File::deleteDirectory($path);
+        }
+    }
+
+    /**
+     * Checks mainly to prevent API errors when a user passes e.g. 'https://domain.com' as a domain. This should be
+     * 'domain.com' instead.
+     * @param string $domain
+     * @throws InvalidDomainException
+     */
+    public function validateDomain(string $domain): void
+    {
+        if (Str::contains($domain, [':', '/', ','])) {
+            throw new InvalidDomainException($domain);
+        }
+    }
+
+    /**
+     * @param string $domain
+     * @throws DomainAlreadyExists
+     */
+    public function checkDomainDoesNotExist(string $domain): void
+    {
+        if (LetsEncryptCertificate::withTrashed()->where('domain', $domain)->exists()) {
+            throw new DomainAlreadyExists($domain);
+        }
+    }
 }
