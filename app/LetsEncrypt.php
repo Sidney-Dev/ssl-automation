@@ -31,9 +31,7 @@ class LetsEncrypt
             
             // additional domains used during authorization
             $addonDomainsAuthorize = implode(" ", $additionalDomainsArray); // (domaina.com domainb.com)
-
-            // dd($addonDomainsAuthorize);
-            
+        
             $convertedDomainsArray = [];
 
             foreach ($additionalDomainsArray as $value) {
@@ -42,7 +40,6 @@ class LetsEncrypt
             
             // additional domains used during the request
             $additionalDomains = implode(" ", $convertedDomainsArray); // (-a domaina.com -a domainb.com)
-            // dd($additionalDomains);
         }
 
         $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
@@ -61,6 +58,7 @@ class LetsEncrypt
     public function certificateAuthorization($mainDomain, $additionalDomains = "")
     {
         $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
+        self::writeFile($authResponse);
         $successMessage = "The authorization tokens was successfully fetched!";
 
         if (Str::contains($authResponse, $successMessage)) {
@@ -94,6 +92,7 @@ class LetsEncrypt
             ));
 
             $response = curl_exec($curl);
+            self::writeFile($response);
             $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
             curl_close($curl);
@@ -117,17 +116,14 @@ class LetsEncrypt
             $this->error = true;
             $this->errorMessage = "The authorization check failed";
         }
-        // dd($check);
-
     }
 
     public function certificateRequest($mainDomain, $additionalDomains)
     {
         $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
-        
+        self::writeFile($request);
         $successMessage = "The SSL certificate was fetched successfully!";
 
-        // dd($request);
         if (Str::contains($request, $successMessage)) {
             $this->setCertificateValidationDate($request);
             $this->message = "success";
@@ -148,5 +144,20 @@ class LetsEncrypt
     {
         preg_match('/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/', $response, $validation_date);
         $this->certificateValidationDate = date('Y-m-d H:i:s', strtotime(current($validation_date)));
+    }
+
+    public static function writeFile($response) {
+        $file = 'manley.txt';
+        if (!file_exists($file)) {
+            $handle = fopen($file,'w');
+            $contents = $response . "PHP_EOL";
+            fwrite($handle,$contents);
+            fclose($handle);
+        } else {
+            $handle = fopen($file,'a');
+            $contents = $response . "PHP_EOL";
+            fwrite($handle,$contents);
+            fclose($handle);
+        }
     }
 }
