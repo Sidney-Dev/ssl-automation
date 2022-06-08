@@ -249,7 +249,7 @@ class LetsEncrypt
      */
     public function checkDomainDoesNotExist(string $domain): void
     {
-        if (LetsEncryptCertificate::withTrashed()->where('domain', $domain)->exists()) {
+        if (LetsEncryptCertificate::where('domain', $domain)->exists()) {
             throw new DomainAlreadyExists($domain);
         }
     }

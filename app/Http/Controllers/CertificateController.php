@@ -344,13 +344,28 @@ class CertificateController extends Controller
     {
         $domains = null;
 
+        $currentDomains = $certificate->domains;
+        dd($currentDomains);
+
         // foreach ($certificate->domains as $domain) {
         //     if ($domain->name != $request->subdomain) {
         //         $domains .= $domain->name . "\r\n";
         //     }
         // }
         // $newDomains = rtrim($domains, "\r\n");
+
+        /**
+         * Get array of all subdomains
+         * Remove the intended domain
+         */
     
+        foreach ($certificate->domains as $domain) {
+            if ($domain->name != $request->subdomain) {
+                $domains .= $domain->name . "\r\n";
+            }
+        }
+        $newDomains = rtrim($domains, "\r\n");
+
         // Check parent domain status
         $env = new Environments();
         $letsencrypt = new LetsEncrypt();
