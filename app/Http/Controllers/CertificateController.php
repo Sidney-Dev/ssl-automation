@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\File;
 use App\Exceptions\DomainAlreadyExists;
 use App\Exceptions\InvalidDomainException;
 
-
 class CertificateController extends Controller
 {
     /**
