@@ -130,13 +130,15 @@
                             </div>
                         </div>
 
-                        <div class="mt-10 text-xl">Domains</div>
-                        <!-- Domain count -->
-                        @if($certificate->domains)
-                        <div class="ml-5 mb-4 text-sm text-gray-500">{{ count($certificate->domains) }}</div>
-                        @else
-                        <div>This certificate does not have any additional domains</div>
-                        @endif
+                        <div class="mt-10 text-xl">
+                            <!-- Domain count -->
+                            @if($certificate->domains)
+                            <div class="ml-5 mb-4 text-sm text-gray-500">Domains: {{ count($certificate->domains) }}</div>
+                            @else
+                            <div>Domains: 0</div>
+                            @endif
+                        </div>
+                        
                         <div class="flex justify-end max-w-7xl mx-auto mt-2">
                             <button type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none" onclick="openNewDomainPopup('{{ $certificate->domains }}')">Add New Domain</button>
                         </div>
@@ -193,7 +195,7 @@
 
                 <div class="fixed z-10 inset-0 overflow-y-auto">
                     <div class="flex items-end sm:items-center justify-center min-h-full p-4 text-center sm:p-0">
-                        <form action="{{ route('delete-domains', $certificate->id) }}" method="post">
+                        <form action="{{ route('store-domains', $certificate->id) }}" method="post">
                             @csrf
                             <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
                                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -203,6 +205,7 @@
                                             <div class="mt-2">
                                                 <p class="text-sm text-gray-500">Are you sure you want to delete this domain?</p>
                                                 <input type="hidden" id="subdomain" name="subdomain" value="" />
+                                                <input type="hidden" name="action" value="deleted" />
                                             </div>
                                         </div>
                                     </div>
