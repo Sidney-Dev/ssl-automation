@@ -125,17 +125,14 @@ class LetsEncrypt
     {
         $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
         self::writeFile($request);
-        $successMessage = "The SSL certificate was fetched successfully!";
 
-        if (!Str::contains($request, $successMessage)) {
+        $fetched = "The SSL certificate was fetched successfully!";
+        $renewed = "Current certificate is valid";
+
+        if (!Str::contains($request, $fetched || !Str::contains($request, $renewed))) {
             $this->error = true;
             $this->errorMessage .= "Failed to fetch the certificate.".PHP_EOL;
         } 
-
-        // if (Str::contains($request,"There is currently no certificate for domain")) {
-        //     $this->error = true;
-        //     $this->errorMessage .= "There is currently no certificate for domain {$mainDomain} in the Acme PHP storage.".PHP_EOL;
-        // }
 
         $this->setCertificateValidationDate($request);
     }
@@ -153,7 +150,7 @@ class LetsEncrypt
     }
 
     public static function writeFile($response) {
-        $file = 'manley.txt';
+        $file = 'log.txt';
         if (!file_exists($file)) {
             $handle = fopen($file,'w');
             $contents = $response . PHP_EOL . date('Y-m-d H:i:s');
@@ -200,6 +197,31 @@ class LetsEncrypt
         }
     }
 
+    public function renew($certificate, $subdomains) {
+
+        try{
+
+            $env = new Environments;
+
+            $env->certificateDeactivation($certificate->environmentID, $certificate->slug);
+            $env->certificateDeletion($certificate->environmentID, $certificate->slug);
+    
+            $this->removeDir($certificate->domain);
+            $this->generate($certificate->domain, $subdomains);
+    
+            $addCertificateToEnvironment = $env->addCertificateToEnvironment($certificate->label, $certificate->environmentID, $certificate->domain);
+               
+            if($addCertificateToEnvironment) {
+    
+                $updatedCertificate = LetsEncryptCertificate::where('domain', $certificate->domain)->first(); //go grab the updated slug by quering letsencryptcertificate model
+                $certificateActivation = $env->certificateActivation($updatedCertificate->environmentID, $updatedCertificate->slug);
+                
+            }
+        } catch(\Exception $e){
+
+        }
+    }
+
      /**
      * Rename ssl certificate directory
      * @param string $domain
@@ -212,11 +234,19 @@ class LetsEncrypt
         $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain;
 
         if (File::exists($path)) {
-            rename($path,$path.$suffix);
+        
+            $newPath = $path.$suffix;
+            exec("mv $path $newPath");
+
         } else {
+
             $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain.$suffix;
+            $replace = str_replace($suffix,"",$path);
+
             if (File::exists($path)) {
-                rename($path,str_replace($suffix,"",$path));
+
+                exec("mv $path $replace");
+
             }
         }
     }
@@ -229,6 +259,7 @@ class LetsEncrypt
             File::deleteDirectory($path);
         }
     }
+
 
     /**
      * Checks mainly to prevent API errors when a user passes e.g. 'https://domain.com' as a domain. This should be

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\LetsEncryptCertificate;
+use App\LetsEncrypt;
 
 class RenewCertificate extends Command
 {
@@ -38,11 +39,25 @@ class RenewCertificate extends Command
          * Call the generate certificate method
          */
 
-
-
-
-
+        $currentTimestamp = date("Y-m-d H:i:s");
+        $certificates = LetsEncryptCertificate::with('domains')->get();
     
+        foreach($certificates as $certificate) {
+            
+            if ($currentTimestamp > $certificate->certificate_validation_date) {
+                
+                $subdomains = null;
+                foreach($certificate->domains as $subdomain) {
+                    $subdomains .= $subdomain->name . "\r\n";
+                }
+                
+                (new LetsEncrypt)->renew($certificate, $subdomains);
+    
+            }
+        }
+
+        // TODO: email notification
+        echo "renewd";
         return 0;
     }
 }

@@ -5,7 +5,6 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EnvironmentController;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController;
-use App\Models\LetsEncryptCertificate;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,30 +66,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/update-user/{id}', [UserController::class, "edit"])->name('edit-user');
     Route::post('/update-user/{id}', [UserController::class, "update"])->name('edit-user');
     Route::post('/delete-user', [UserController::class, "destroy"])->name('delete-user');
-});
-
-
-Route::get("test", function(){
-    $currentTimestamp = date("Y-m-d H:i:s");
-
-    $certificates = LetsEncryptCertificate::with('domains')->get();
-    // dd($certificates);
-    foreach($certificates as $certificate) {
-        
-        if ($certificate->certificate_validation_date > $currentTimestamp) {
-            
-            $subdomains = null;
-            foreach($certificate->domains as $subdomain) {
-                $subdomains .= $subdomain->name . "\r\n";
-            }
-
-            // dd($certificate);
-            
-            (new LetsEncryptCertificate)->createCertificate($certificate, $subdomains);
-
-        }
-
-    }
-
-    return redirect()->back();
 });

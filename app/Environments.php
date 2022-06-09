@@ -63,7 +63,7 @@ class Environments
 
         $response = curl_exec($curl);
         curl_close($curl);
-      
+
         if (strpos($response,"error") === false) {
             $certificateID = $this->getCertificateID($certName, $envID);
             LetsEncryptCertificate::where('domain', $domain)->update(['slug' => $certificateID, 'environmentID' => $envID, 'status' => 'installed', 'label' => $certName]); // update LetsEncryptCertificate table
