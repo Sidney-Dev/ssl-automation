@@ -51,7 +51,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/create-certificate',  [CertificateController::class, "store"]);
     Route::get('/certificate-details/{certificate}', [CertificateController::class, "show"])->name('certificate-details');
     Route::post('/certificate-details/{certificate}/store-domains', [CertificateController::class, "storeDomains"])->name('store-domains');
-    Route::post('/certificate-details/{certificate}/delete-domains', [CertificateController::class, "deleteDomains"])->name('delete-domains');
     Route::get('/certificate-remove/{id}', [CertificateController::class, "destroy"])->name('certificate-remove');
     Route::post('/certificate-delete', [CertificateController::class, "delete"])->name('certificate-delete');
     Route::get('/certificate-activate/{id}', [CertificateController::class, "activate"])->name('certificate-activate');
