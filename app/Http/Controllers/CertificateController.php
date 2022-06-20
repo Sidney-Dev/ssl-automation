@@ -238,8 +238,12 @@ class CertificateController extends Controller
         $letsencrypt = new LetsEncrypt;
 
         // Validate domain by checking invalid characters
-        $letsencrypt->validateDomain($request->domains);
-
+        try{
+            $letsencrypt->validateDomain($request->domains);
+        } catch(\Exception $e) {
+            return redirect()->route("certificate-details", $certificate->id)->with('error',$e->getMessage());
+        }
+        
         $domainLists = explode("\r\n", $request->domains);
     
         // ensure the total number of domains per certificate is 70
@@ -250,10 +254,14 @@ class CertificateController extends Controller
         $env = new Environments();
 
         // Check if domain already exists
-        foreach ($domainLists as $domain) {
-            $letsencrypt->checkDomainDoesNotExist($domain);
+        try {
+            foreach ($domainLists as $domain) {
+                $letsencrypt->checkDomainDoesNotExist($domain);
+            }
+        } catch(\Exception $e) {
+            return redirect()->route("certificate-details", $certificate->id)->with('error', $e->getMessage());
         }
-
+    
         switch ($certificate->status) {
 
             case 'activated':
