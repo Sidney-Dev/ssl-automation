@@ -229,9 +229,9 @@ class LetsEncrypt
      * @return void
      */
 
-    public function renameDir($domain,$suffix): void
+    public function renameDir($domain,$suffix)
     {
-        $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain;
+        $path = realpath(env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain);
 
         if (File::exists($path)) {
         
@@ -240,20 +240,18 @@ class LetsEncrypt
 
         } else {
 
-            $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain.$suffix;
+            $path = realpath(env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain.$suffix);
             $replace = str_replace($suffix,"",$path);
 
             if (File::exists($path)) {
-
                 exec("mv $path $replace");
-
             }
         }
     }
     
     public function removeDir($domain)
     {
-        $path = env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain;
+        $path = realpath(env('MAIN_DIR') . '/.acmephp/master/certs/' . $domain);
 
         if (File::exists($path)) {
             File::deleteDirectory($path);
@@ -276,7 +274,7 @@ class LetsEncrypt
 
     /**
      * @param string $domain
-     * @throws DomainAlreadyExists
+     * @throws DomainAlreadyExists 
      */
     public function checkDomainDoesNotExist(string $domain): void
     {
