@@ -64,7 +64,7 @@ class LetsEncrypt
     public function certificateAuthorization($mainDomain, $additionalDomains = "")
     {
         $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
-        self::writeFile($authResponse);
+      
         $successMessage = "The authorization tokens was successfully fetched!";
 
         if (Str::contains($authResponse, $successMessage)) {
@@ -98,7 +98,7 @@ class LetsEncrypt
             ));
 
             $response = curl_exec($curl);
-            self::writeFile($response);
+          
             $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
             curl_close($curl);
@@ -124,7 +124,6 @@ class LetsEncrypt
     public function certificateRequest($mainDomain, $additionalDomains)
     {
         $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
-        self::writeFile($request);
 
         $fetched = "The SSL certificate was fetched successfully!";
         $renewed = "Current certificate is valid";
@@ -147,21 +146,6 @@ class LetsEncrypt
     {
         preg_match('/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/', $response, $validation_date);
         $this->certificateValidationDate = date('Y-m-d H:i:s', strtotime(current($validation_date)));
-    }
-
-    public static function writeFile($response) {
-        $file = 'log.txt';
-        if (!file_exists($file)) {
-            $handle = fopen($file,'w');
-            $contents = $response . PHP_EOL . date('Y-m-d H:i:s');
-            fwrite($handle,$contents);
-            fclose($handle);
-        } else {
-            $handle = fopen($file,'a');
-            $contents = $response .  PHP_EOL . date('Y-m-d H:i:s');
-            fwrite($handle,$contents);
-            fclose($handle);
-        }
     }
 
     public function checkGeneratedCertificateDir($domain) {
