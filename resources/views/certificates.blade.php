@@ -48,7 +48,7 @@
                                                     VALIDATE UNTIL
                                                 </th>
                                                 <th scope="col" class="px-6 py-3">
-                                                    TOTAL SUBDOMAINS
+                                                    ADDITIONAL DOMAINS
                                                 </th>
                                                 <th scope="col" class="px-6 py-3">
                                                 </th>
