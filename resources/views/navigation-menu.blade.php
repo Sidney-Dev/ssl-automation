@@ -24,12 +24,6 @@
                 </div>
 
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-jet-nav-link href="{{ route('environment') }}" :active="request()->routeIs('environment')">
-                        {{ __('Environments') }}
-                    </x-jet-nav-link>
-                </div>
-
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-jet-nav-link href="{{ route('user') }}" :active="request()->routeIs('user')">
                         {{ __('Users') }}
                     </x-jet-nav-link>

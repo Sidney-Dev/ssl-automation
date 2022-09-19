@@ -36,7 +36,7 @@
                                                     ID
                                                 </th>
                                                 <th scope="col" class="px-6 py-3">
-                                                    DOMAIN
+                                                    LABEL
                                                 </th>
                                                 <th scope="col" class="px-6 py-3">
                                                     STATUS
@@ -61,10 +61,10 @@
                                                     {{ $certInfo->id }}
                                                 </th>
                                                 <td class="px-6 py-4">
-                                                    @if($certInfo->status == 'activated')
-                                                    <a href="https://{{ $certInfo->domain }}" target="_blank">{{ $certInfo->domain }}</a>
+                                                    @if($certInfo->label)
+                                                        {{ $certInfo->label }}
                                                     @else
-                                                    {{ $certInfo->domain }}
+                                                        {{ $certInfo->domain }}
                                                     @endif
                                                 </td>
                                                 @if($certInfo->status == 'success')
@@ -198,9 +198,8 @@
                                                             <td>environment</td>
                                                             <td class="pt-4">
                                                                 <select name="environment" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                                                    <option value="">Please select environment</option>
-                                                                    <option value="6294-df6a4756-6dcc-4190-90b9-d7b3e870a6c2">Dev</option>
                                                                     <option value="6290-df6a4756-6dcc-4190-90b9-d7b3e870a6c2">Live</option>
+                                                                    <option value="6294-df6a4756-6dcc-4190-90b9-d7b3e870a6c2">Dev</option>
                                                                     <option value="6292-df6a4756-6dcc-4190-90b9-d7b3e870a6c2">Test</option>
                                                                 </select>
                                                                 @if ($errors->has('environment'))
