@@ -24,6 +24,23 @@ class LetsEncrypt
     public $errorMessage = null;
 
 
+    public static function writeFile($response) {
+
+        $file = 'log.txt';
+
+        if (!file_exists($file)) {
+            $handle = fopen($file,'w');
+            $contents = $response . PHP_EOL . date('Y-m-d H:s:i');
+            fwrite($handle, $contents);
+            fclose($handle);
+        } else {
+            $handle = fopen($file,'a');
+            $contents = $response . PHP_EOL . date('Y-m-d H:s:i');
+            fwrite($handle, $contents);
+            fclose($handle);
+        }
+    }
+
     public function generate($mainDomain, $additionalDomains = "")
     {
         $addonDomainsAuthorize = null;
@@ -47,6 +64,7 @@ class LetsEncrypt
 
         $authResponse = $this->certificateAuthorization($mainDomain, $addonDomainsAuthorize);
 
+        self::writeFile($authResponse);
         $this->certificateChallenge($authResponse);
 
         $this->certificateRequestCheck($mainDomain, $addonDomainsAuthorize);
@@ -58,6 +76,7 @@ class LetsEncrypt
         $this->checkGeneratedCertificateDir($mainDomain); 
 
         if (!empty($additionalDomains)) return $additionalDomainsArray;
+
         return true;
     }
 
@@ -73,13 +92,15 @@ class LetsEncrypt
             $this->error = true;
             $this->errorMessage .= "Failed to fetch the authorization token.".PHP_EOL;
         }
+        self::writeFile($authResponse);
+
     }
 
     public function certificateChallenge($authResponse): void
     {
         $matches = [];
         preg_match_all('/{(.*?)}}/', $authResponse, $matches);
-
+        
         foreach ($matches[0] as $match) {
 
             $data = json_decode($match);
@@ -98,6 +119,8 @@ class LetsEncrypt
             ));
 
             $response = curl_exec($curl);
+
+            self::writeFile($response);
           
             $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
@@ -113,6 +136,8 @@ class LetsEncrypt
     public function certificateRequestCheck($mainDomain, $additionalDomains = "")
     {
         $check = shell_exec(env('ROOT_DIR') . "check -s http {$mainDomain} {$additionalDomains}");
+        self::writeFile($check);
+
         $successMessage = 'The authorization check was successful!';
 
         if (!Str::contains($check, $successMessage)) {
@@ -124,6 +149,7 @@ class LetsEncrypt
     public function certificateRequest($mainDomain, $additionalDomains)
     {
         $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
+        self::writeFile($request);
 
         $fetched = "The SSL certificate was fetched successfully!";
         $renewed = "Current certificate is valid";
