@@ -5,6 +5,7 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EnvironmentController;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController;
+use GuzzleHttp\Client;
 
 /*
 |--------------------------------------------------------------------------
