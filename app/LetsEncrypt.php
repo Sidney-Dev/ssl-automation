@@ -63,10 +63,10 @@ class LetsEncrypt
 
     public function certificateAuthorization($mainDomain, $additionalDomains = "")
     {
-        dd(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
-        $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
-      
-        // dd($authResponse);
+        // dd(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
+        $authResponse = exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
+        // $test = shell_exec('echo "Hello world" > /del/null &');
+        dd($authResponse);
 
         $successMessage = "The authorization tokens was successfully fetched!";
 
