@@ -20,7 +20,8 @@ use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 Route::get('/shell-exec', function () {
 
     $shell = shell_exec("php /home/ubuntu/acmephp.phar authorize example.com -n");
-    dd($shell);
+    $ls = shell_exec("ls");
+    dd($ls);
     return view('welcome');
 });
 
