@@ -83,7 +83,6 @@ class LetsEncrypt
     public function certificateAuthorization($mainDomain, $additionalDomains = "")
     {
         $authResponse = shell_exec(env('ROOT_DIR') . "authorize {$mainDomain} {$additionalDomains} -n");
-        dd($authResponse, $mainDomain);
         $successMessage = "The authorization tokens was successfully fetched!";
 
         if (Str::contains($authResponse, $successMessage)) {
