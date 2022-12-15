@@ -150,6 +150,7 @@ class LetsEncrypt
     {
         $request = shell_exec(env('ROOT_DIR') . "request {$mainDomain} {$additionalDomains}");
         self::writeFile($request);
+        dd($request);
 
         $fetched = "The SSL certificate was fetched successfully!";
         $renewed = "Current certificate is valid";
