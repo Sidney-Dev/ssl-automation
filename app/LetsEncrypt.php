@@ -154,9 +154,9 @@ class LetsEncrypt
         $fetched = "The SSL certificate was fetched successfully!";
         $renewed = "Current certificate is valid";
 
-        if (!Str::contains($request, $fetched || !Str::contains($request, $renewed))) {
+        if (Str::contains($request, $fetched)) {
             $this->error = true;
-            $this->errorMessage .= "Failed to fetch the certificate.".PHP_EOL;
+            $this->errorMessage .= "Could not fetch ceertificate.".PHP_EOL;
         } 
 
         $this->setCertificateValidationDate($request);
