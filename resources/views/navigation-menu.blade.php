@@ -8,6 +8,9 @@
                     <a href="{{ route('dashboard') }}">
                         <x-jet-application-mark class="block h-9 w-auto" />
                     </a>
+                    <x-slot name="logo">
+                        <img src="{{ url('logo.png') }}" />
+                    </x-slot>
                 </div>
 
                 <!-- Navigation Links -->
